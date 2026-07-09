@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"core: %{http_code}\\\\n\" \"https://cdn.jsdelivr.net/npm/@tiptap/core@2.9.1/dist/index.umd.min.js\")",
+      "Bash(curl -s -o /dev/null -w \"starter-kit: %{http_code}\\\\n\" \"https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2.9.1/dist/index.umd.min.js\")",
+      "Bash(curl -s \"https://cdn.jsdelivr.net/npm/@tiptap/core@2.9.1/dist/index.umd.min.js\")",
+      "Bash(curl -s \"https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2.9.1/dist/index.umd.min.js\")",
+      "Bash(python - /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/ing_test.py)",
+      "Bash(rm -f /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/ing_flow.db)",
+      "Bash(DATABASE_PATH=/c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/ing_flow.db DEEPSEEK_API_KEY='' PYTHONPATH=/c/Users/Will/dealcrm python /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/ing_test.py)",
+      "Bash(python -c \"import fastapi\")",
+      "Bash(curl -s --max-time 5 http://localhost:11434/api/tags)",
+      "Bash(PYTHONPATH=/c/Users/Will/dealcrm python /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/ollama_e2e.py)",
+      "Bash(ollama ps *)",
+      "Bash(nvidia-smi --query-gpu=name,memory.total,memory.used,memory.free --format=csv)",
+      "Bash(ollama rm *)",
+      "Bash(ollama list *)",
+      "Bash(ollama pull *)",
+      "Bash(PYTHONPATH=/c/Users/Will/dealcrm python /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/qwen_e2e.py)",
+      "Bash(nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader)",
+      "WebSearch",
+      "Bash(python -m pip install --quiet pymupdf pytesseract)",
+      "Bash(python -c \"import fitz; print\\('pymupdf', fitz.pymupdf_version if hasattr\\(fitz,'pymupdf_version'\\) else fitz.VersionBind\\)\")",
+      "Bash(python -c \"import pytesseract; print\\('pytesseract imported'\\)\")",
+      "Bash(python -c \"import PIL; print\\('pillow', PIL.__version__\\)\")",
+      "Bash(python -m pip show pymupdf pytesseract pillow)",
+      "Bash(PYTHONPATH=/c/Users/Will/dealcrm python /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/pdf_test.py)",
+      "PowerShell(winget install UB-Mannheim.TesseractOCR --accept-package-agreements --accept-source-agreements --silent 2>&1)",
+      "Bash(rm -f /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/pdf_endpoint.db)",
+      "Bash(DATABASE_PATH=/c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/pdf_endpoint.db PYTHONPATH=/c/Users/Will/dealcrm python /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/pdf_endpoint_test.py)",
+      "Bash(SP=\"/c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad\" *)",
+      "Bash(rm -f /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/email_pdf.db)",
+      "Bash(DATABASE_PATH=/c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/email_pdf.db PYTHONPATH=/c/Users/Will/dealcrm python /c/Users/Will/AppData/Local/Temp/claude/C--Users-Will-dealcrm/35becb1a-d136-400e-a6cb-1a600011684c/scratchpad/email_pdf_test.py)"
+    ]
+  }
+}

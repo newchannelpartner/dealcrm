@@ -1,0 +1,125 @@
+"""Contacts router."""
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Contact
+from app.auth import get_current_owner
+
+router = APIRouter(prefix="/contacts", tags=["contacts"])
+
+
+class ContactCreate(BaseModel):
+    name: str
+    email: str = ""
+    phone: str = ""
+    firm: str = ""
+    title: str = ""
+    tags: list[str] = []
+    summary_text: str = ""
+
+
+class ContactUpdate(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    firm: str | None = None
+    title: str | None = None
+    tags: list[str] | None = None
+    summary_text: str | None = None
+
+
+@router.get("")
+def list_contacts(
+    search: str = Query(default=""),
+    tag: str = Query(default=""),
+    owner_id: int = Depends(get_current_owner),
+    db: Session = Depends(get_db),
+):
+    q = db.query(Contact).filter(Contact.owner_id == owner_id)
+
+    if search:
+        q = q.filter(
+            (Contact.name.ilike(f"%{search}%"))
+            | (Contact.email.ilike(f"%{search}%"))
+            | (Contact.firm.ilike(f"%{search}%"))
+        )
+
+    if tag:
+        q = q.filter(Contact.tags.contains(tag))
+
+    contacts = q.order_by(Contact.updated_at.desc()).all()
+    return [c.to_dict() for c in contacts]
+
+
+@router.get("/{contact_id}")
+def get_contact(
+    contact_id: int,
+    owner_id: int = Depends(get_current_owner),
+    db: Session = Depends(get_db),
+):
+    contact = _get_contact_or_404(contact_id, owner_id, db)
+    return contact.to_dict()
+
+
+@router.post("")
+def create_contact(
+    data: ContactCreate,
+    owner_id: int = Depends(get_current_owner),
+    db: Session = Depends(get_db),
+):
+    contact = Contact(
+        name=data.name,
+        email=data.email,
+        phone=data.phone,
+        firm=data.firm,
+        title=data.title,
+        tags=data.tags,
+        summary_text=data.summary_text,
+        owner_id=owner_id,
+    )
+    db.add(contact)
+    db.commit()
+    db.refresh(contact)
+    return contact.to_dict()
+
+
+@router.put("/{contact_id}")
+def update_contact(
+    contact_id: int,
+    data: ContactUpdate,
+    owner_id: int = Depends(get_current_owner),
+    db: Session = Depends(get_db),
+):
+    contact = _get_contact_or_404(contact_id, owner_id, db)
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(contact, key, value)
+    contact.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(contact)
+    return contact.to_dict()
+
+
+@router.delete("/{contact_id}")
+def delete_contact(
+    contact_id: int,
+    owner_id: int = Depends(get_current_owner),
+    db: Session = Depends(get_db),
+):
+    contact = _get_contact_or_404(contact_id, owner_id, db)
+    db.delete(contact)
+    db.commit()
+    return {"ok": True}
+
+
+def _get_contact_or_404(contact_id: int, owner_id: int, db: Session) -> Contact:
+    contact = db.query(Contact).filter(
+        Contact.id == contact_id, Contact.owner_id == owner_id
+    ).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return contact
