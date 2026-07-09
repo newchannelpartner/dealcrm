@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.database import init_db, engine, SessionLocal
-from app.routers import contacts, deals, notes, todos, dashboard, inbound, users
+from app.routers import contacts, deals, notes, todos, dashboard, inbound, users, admin_upload
 
 
 @asynccontextmanager
@@ -68,6 +68,7 @@ app.include_router(todos.router)
 app.include_router(dashboard.router)
 app.include_router(inbound.router)
 app.include_router(users.router)
+app.include_router(admin_upload.router)
 
 
 # Health check (no auth)
