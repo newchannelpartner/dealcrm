@@ -19,3 +19,14 @@ venv/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Uploads
+uploads/
+
+# Backups
+*.bak
+*.backup
+
+# WorkBuddy
+.workbuddy/
+.claude/

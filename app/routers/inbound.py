@@ -34,6 +34,12 @@ class PasteCreate(BaseModel):
     subject: str = ""
 
 
+class WhatsAppPaste(BaseModel):
+    text: str
+    group_name: str = ""
+    subject: str = ""
+
+
 class ApproveContact(BaseModel):
     name: str
     email: str = ""
@@ -72,6 +78,22 @@ def create_from_paste(
     ing = _create_ingestion(db, owner_id, IngestionSource.paste.value,
                             subject=data.subject, sender="", raw_text=data.text)
     _process_async(ing.id)
+    return ing.to_dict()
+
+
+@router.post("/whatsapp")
+def create_from_whatsapp(
+    data: WhatsAppPaste,
+    owner_id: int = Depends(get_current_owner),
+    db: Session = Depends(get_db),
+):
+    """Paste WhatsApp group chat export — AI parses business-relevant conversations."""
+    if not data.text or not data.text.strip():
+        raise HTTPException(status_code=400, detail="Text is empty")
+    subject = data.subject or data.group_name or "WhatsApp Chat"
+    ing = _create_ingestion(db, owner_id, "whatsapp",
+                            subject=subject, sender="", raw_text=data.text)
+    _process_whatsapp_async(ing.id)
     return ing.to_dict()
 
 
@@ -332,6 +354,50 @@ def delete_ingestion(
 def _process_async(ingestion_id: int):
     t = threading.Thread(target=_process_ingestion, args=(ingestion_id,), daemon=True)
     t.start()
+
+
+def _process_whatsapp_async(ingestion_id: int):
+    t = threading.Thread(target=_process_whatsapp, args=(ingestion_id,), daemon=True)
+    t.start()
+
+
+def _process_whatsapp(ingestion_id: int):
+    """Process WhatsApp chat export — uses WhatsApp-specific AI prompt."""
+    import asyncio
+
+    db = SessionLocal()
+    try:
+        ing = db.get(Ingestion, ingestion_id)
+        if not ing:
+            return
+
+        from app.ai import analyze_whatsapp_chat
+        result = asyncio.run(analyze_whatsapp_chat(ing.raw_text))
+
+        ing.ai_summary = result.get("summary", "")
+        ing.ai_takeaways = result.get("takeaways", [])
+        ing.proposals = {
+            "summary": result.get("summary", ""),
+            "takeaways": result.get("takeaways", []),
+            "deal": _resolve_deal(db, ing.owner_id, result.get("deal_hint") or {}),
+            "contacts": _resolve_contacts(db, ing.owner_id, result.get("contacts") or []),
+            "todos": _normalize_todos(result.get("todos") or []),
+        }
+        ing.status = IngestionStatus.pending.value
+        db.commit()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception("WhatsApp ingestion parsing failed")
+        try:
+            ing = db.get(Ingestion, ingestion_id)
+            if ing:
+                ing.status = IngestionStatus.error.value
+                ing.error_msg = str(e)[:500]
+                db.commit()
+        except Exception:
+            pass
+    finally:
+        db.close()
 
 
 def _process_ingestion(ingestion_id: int):

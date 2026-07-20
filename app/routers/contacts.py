@@ -17,9 +17,11 @@ class ContactCreate(BaseModel):
     email: str = ""
     phone: str = ""
     firm: str = ""
+    firm_id: int | None = None
     title: str = ""
     tags: list[str] = []
     summary_text: str = ""
+    relationship_tier: str = ""
 
 
 class ContactUpdate(BaseModel):
@@ -27,9 +29,12 @@ class ContactUpdate(BaseModel):
     email: str | None = None
     phone: str | None = None
     firm: str | None = None
+    firm_id: int | None = None
     title: str | None = None
     tags: list[str] | None = None
     summary_text: str | None = None
+    last_contacted_at: str | None = None
+    relationship_tier: str | None = None
 
 
 @router.get("")
@@ -76,9 +81,11 @@ def create_contact(
         email=data.email,
         phone=data.phone,
         firm=data.firm,
+        firm_id=data.firm_id,
         title=data.title,
         tags=data.tags,
         summary_text=data.summary_text,
+        relationship_tier=data.relationship_tier or "",
         owner_id=owner_id,
     )
     db.add(contact)
@@ -96,6 +103,18 @@ def update_contact(
 ):
     contact = _get_contact_or_404(contact_id, owner_id, db)
     update_data = data.model_dump(exclude_unset=True)
+
+    # Handle last_contacted_at specially (ISO string → datetime)
+    if "last_contacted_at" in update_data:
+        val = update_data.pop("last_contacted_at")
+        if val:
+            try:
+                contact.last_contacted_at = datetime.fromisoformat(val)
+            except (ValueError, TypeError):
+                pass
+        else:
+            contact.last_contacted_at = None
+
     for key, value in update_data.items():
         setattr(contact, key, value)
     contact.updated_at = datetime.now(timezone.utc)

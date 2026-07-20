@@ -128,6 +128,67 @@ async def analyze_call_notes(text: str) -> dict:
     }
 
 
+WHATSAPP_PROMPT = (
+    "You are an assistant to an M&A and private credit professional. "
+    "The following is a WhatsApp group chat export. Extract business-relevant intelligence. "
+    "Ignore casual banter, greetings, and non-business messages. Focus on:\n"
+    "- Deal discussions, company names, valuation hints\n"
+    "- Action items or commitments made by specific people\n"
+    "- New contacts mentioned with their roles\n"
+    "- Market intelligence, competitor moves, deal rumors\n\n"
+    "Return ONLY valid JSON, no markdown, with this shape:\n"
+    "{\n"
+    '  "summary": "2-3 sentence summary of the business-relevant chat",\n'
+    '  "takeaways": ["key business point", "..."],\n'
+    '  "deal_hint": {"name": "deal or company name mentioned, or empty", '
+    '"keywords": ["terms to match existing deals"]},\n'
+    '  "contacts": [{"name": "Full Name", "firm": "", "title": "", '
+    '"role": "context from conversation"}],\n'
+    '  "todos": [{"title": "action item", "priority": "high|medium|low", '
+    '"due_date_suggestion": "tomorrow|next week|in 3 days|YYYY-MM-DD|empty"}]\n'
+    "}"
+)
+
+
+async def analyze_whatsapp_chat(text: str) -> dict:
+    """Parse WhatsApp group chat export for business intelligence.
+
+    Handles the standard WhatsApp export format:
+    [DD/MM/YY, HH:MM] Sender: Message
+    Also handles forwarded messages with header boilerplate.
+    """
+    empty = {"summary": "", "takeaways": [], "deal_hint": {}, "contacts": [], "todos": []}
+    if not _is_configured() or not text or not text.strip():
+        return empty
+
+    # Strip WhatsApp forwarding headers
+    text = re.sub(r"^.*Forwarded.*$", "", text, flags=re.MULTILINE)
+    text = re.sub(r"( WhatsApp Chat with |Messages and calls are end-to-end encrypted).*", "", text)
+
+    response_text = await _call_llm(WHATSAPP_PROMPT, text[:3000])
+    if not response_text:
+        return empty
+
+    parsed = _parse_json_defensively(response_text)
+    if not parsed:
+        return empty
+
+    deal_hint = parsed.get("deal_hint")
+    if not isinstance(deal_hint, dict):
+        deal_hint = {}
+
+    return {
+        "summary": str(parsed.get("summary", "")),
+        "takeaways": _ensure_list(parsed.get("takeaways")),
+        "deal_hint": {
+            "name": str(deal_hint.get("name", "")),
+            "keywords": _ensure_list(deal_hint.get("keywords")),
+        },
+        "contacts": _ensure_list(parsed.get("contacts")),
+        "todos": _ensure_list(parsed.get("todos")),
+    }
+
+
 async def _call_llm(system_prompt: str, user_content: str) -> str | None:
     """Make a single call to the configured OpenAI-compatible chat endpoint."""
     cfg = _llm_config()
@@ -231,3 +292,138 @@ def parse_due_date(suggestion: str | None) -> datetime | None:
     if match:
         return now + timedelta(weeks=int(match.group(1)))
     return None
+
+
+# ──────────────────────────────────────────────
+#  Proactive AI — pitch, briefing, follow-ups
+# ──────────────────────────────────────────────
+
+PITCH_PROMPT = (
+    "You are an M&A advisor writing for an internal team meeting. "
+    "Given the deal details below, write a **3-sentence elevator pitch** that a team member "
+    "can use to quickly brief others. Include: what the deal is, why it matters, and current status. "
+    "Return ONLY the pitch text, no preamble, no markdown."
+)
+
+BRIEFING_PROMPT = (
+    "You are an M&A analyst preparing a morning briefing for your team. "
+    "Analyze the deal information below and return ONLY valid JSON (no markdown) with this shape:\n"
+    "{\n"
+    '  "summary": "2-3 sentence executive summary",\n'
+    '  "key_points": ["bullet 1", "bullet 2", "bullet 3"],\n'
+    '  "next_actions": "what to do next — one sentence",\n'
+    '  "risk_flag": "one-sentence risk or concern, or empty string if none"\n'
+    "}"
+)
+
+FOLLOWUP_PROMPT = (
+    "You are an M&A professional maintaining a client relationship. "
+    "Draft a **brief, warm follow-up email** to the contact described below. "
+    "They haven't been contacted in a while. Reference past context naturally. "
+    "Keep it 3-5 sentences, professional but not stiff. "
+    "Return ONLY the email body, no subject line, no preamble."
+)
+
+
+async def generate_deal_pitch(name: str, deal_type: str, stage: str,
+                               size_mm: float | None, notes: str,
+                               milestones: list) -> str | None:
+    """Generate a 3-sentence elevator pitch for a deal."""
+    if not _is_configured():
+        return None
+
+    type_labels = {
+        "sell-side": "Sell-Side M&A", "buy-side": "Buy-Side M&A",
+        "credit": "Private Credit", "independent-sponsor": "Independent Sponsor",
+    }
+    type_str = type_labels.get(deal_type, deal_type)
+    size_str = f"${size_mm}M" if size_mm else "undisclosed"
+    done = [m.get("name", "") for m in (milestones or []) if m.get("done")]
+    ms_str = ", ".join(done) if done else "none yet"
+
+    context = (
+        f"Deal: {name}\n"
+        f"Type: {type_str}\n"
+        f"Stage: {stage}\n"
+        f"Size: {size_str}\n"
+        f"Milestones completed: {ms_str}\n"
+        f"Notes: {notes[:800] if notes else 'No notes yet'}"
+    )
+
+    result = await _call_llm(PITCH_PROMPT, context)
+    return result.strip() if result else None
+
+
+async def generate_deal_briefing(
+    deal_name: str, deal_type: str, deal_stage: str,
+    size_mm: float | None, expected_fee: float | None,
+    fee_type: str, milestones: list,
+    contact_names: str, notes_summary: str,
+    open_todos: list, notes_text: str,
+) -> dict | None:
+    """Generate a structured morning briefing for a deal."""
+    if not _is_configured():
+        return None
+
+    type_labels = {
+        "sell-side": "Sell-Side M&A", "buy-side": "Buy-Side M&A",
+        "credit": "Private Credit", "independent-sponsor": "Independent Sponsor",
+    }
+
+    todo_str = "; ".join(
+        f"[{t.get('priority', '')}] {t.get('title', '')}" for t in (open_todos or [])[:5]
+    ) or "none"
+
+    done = [m.get("name", "") for m in (milestones or []) if m.get("done")]
+    pending = [m.get("name", "") for m in (milestones or []) if not m.get("done")]
+
+    context = (
+        f"Deal: {deal_name}\n"
+        f"Type: {type_labels.get(deal_type, deal_type)}\n"
+        f"Stage: {deal_stage}\n"
+    )
+    context += f"Size: ${size_mm}M\n" if size_mm else "Size: undisclosed\n"
+    context += f"Expected Fee: ${expected_fee}K ({fee_type})\n" if expected_fee else ""
+    context += f"Key Contacts: {contact_names or 'none'}\n"
+    context += f"Milestones done: {', '.join(done) or 'none'}\n"
+    context += f"Milestones pending: {', '.join(pending) or 'none'}\n"
+    context += f"Open Todos: {todo_str}\n"
+    if notes_summary:
+        context += f"Recent Notes Summary: {notes_summary[:600]}\n"
+    context += f"Full Notes: {(notes_text or '')[:1200]}"
+
+    result = await _call_llm(BRIEFING_PROMPT, context)
+    if not result:
+        return None
+
+    parsed = _parse_json_defensively(result)
+    if not parsed:
+        return None
+
+    return {
+        "summary": str(parsed.get("summary", "")),
+        "key_points": _ensure_list(parsed.get("key_points")),
+        "next_actions": str(parsed.get("next_actions", "")),
+        "risk_flag": str(parsed.get("risk_flag", "")),
+    }
+
+
+async def generate_followup_email(
+    contact_name: str, firm: str, tier: str,
+    recent_context: str,
+) -> str | None:
+    """Draft a follow-up email for a contact who hasn't been contacted recently."""
+    if not _is_configured():
+        return None
+
+    tier_label = {"A": "core (most important)", "B": "regular", "C": "occasional"}.get(tier, "")
+
+    context = (
+        f"Contact: {contact_name}\n"
+        f"Firm: {firm or 'unknown'}\n"
+        f"They are a {tier_label} contact.\n"
+        f"Last conversation context: {recent_context[:1000] or 'No recent notes'}"
+    )
+
+    result = await _call_llm(FOLLOWUP_PROMPT, context)
+    return result.strip() if result else None

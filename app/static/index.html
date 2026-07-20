@@ -25,360 +25,223 @@ try {
 </script>
 <style>
 :root {
-  --bg: #0F1117; --surface: #1A1D27; --surface2: #22262F; --surface3: #2A2E38;
-  --text: #E4E6ED; --text2: #9CA3AF; --text3: #6B7280;
-  --accent: #4F8EF7; --accent-dim: #3A6FD8; --green: #34D399; --red: #F87171;
-  --orange: #FBBF24; --purple: #A78BFA; --border: #2A2E38;
-  --radius: 6px; --radius-lg: 10px;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "SF Mono", "Fira Code", "Fira Mono", monospace;
+  --bg: #F8F9FC; --surface: #FFFFFF; --surface2: #F1F3F9; --surface3: #E4E7F0;
+  --text: #1A1D2E; --text2: #5F6578; --text3: #969CB0;
+  --accent: #3568E5; --accent-dim: #2B52C9; --green: #10B981; --red: #EF4444;
+  --orange: #F59E0B; --purple: #8B5CF6; --border: #E4E7F0;
+  --radius: 8px; --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,.04), 0 2px 4px rgba(0,0,0,.03);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 13px; -webkit-text-size-adjust: 100%; }
+html { font-size: 14px; -webkit-text-size-adjust: 100%; }
 body {
   font-family: var(--font); background: var(--bg); color: var(--text);
-  line-height: 1.5; min-height: 100dvh; overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
+  line-height: 1.5; min-height: 100dvh; -webkit-font-smoothing: antialiased;
 }
 a { color: var(--accent); text-decoration: none; }
 button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 input, textarea, select { font-family: inherit; font-size: inherit; outline: none; }
 
 /* Layout */
-.app { max-width: 1200px; margin: 0 auto; padding: 0 16px 80px; }
+.app { max-width: 1200px; margin: 0 auto; padding: 0 20px 80px; }
 .header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 16px 12px; border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; background: var(--bg); z-index: 50;
+  padding: 14px 0 12px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: rgba(248,249,252,.92); z-index: 50;
+  backdrop-filter: blur(8px);
 }
-.header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.3px; }
+.header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.3px; color: #1A1D2E; }
 .header h1 span { color: var(--accent); }
-.header-user { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text2); }
-.header-user .hu-name { color: var(--text2); }
-.header-user button { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); border-radius: var(--radius); padding: 4px 9px; font-size: 0.75rem; cursor: pointer; }
-.header-user button:hover { background: var(--surface3); color: var(--text); }
-/* Users admin list */
-.user-row { display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; background: var(--surface2); }
+.header-user { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text2); }
+.header-user button { background: var(--surface); border: 1px solid var(--border); color: var(--text2); border-radius: var(--radius); padding: 5px 10px; font-size: 0.75rem; cursor: pointer; box-shadow: var(--shadow-sm); }
+.header-user button:hover { background: var(--surface2); }
+.user-row { display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; background: var(--surface); }
 .user-row .u-name { font-weight: 600; font-size: 0.85rem; flex: 1; }
 .user-row .u-you { font-size: 0.7rem; color: var(--text3); }
 
 /* Tabs */
 .tabs {
-  display: flex; gap: 0; border-bottom: 1px solid var(--border);
-  position: sticky; top: 49px; background: var(--bg); z-index: 49;
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  display: flex; gap: 2px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 48px; background: rgba(248,249,252,.92); z-index: 49;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 4px 0 0;
+  backdrop-filter: blur(8px);
 }
 .tabs button {
-  padding: 10px 16px; font-size: 0.85rem; font-weight: 500;
+  padding: 10px 16px; font-size: 0.84rem; font-weight: 500;
   color: var(--text2); background: none; white-space: nowrap;
   border-bottom: 2px solid transparent; transition: all 0.15s;
+  border-radius: 4px 4px 0 0;
 }
-.tabs button:hover { color: var(--text); }
+.tabs button:hover { color: var(--text); background: var(--surface2); }
 .tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-/* Bottom nav (mobile) */
 .bottom-nav {
   display: none; position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--surface); border-top: 1px solid var(--border);
-  z-index: 100; padding: 4px 0 env(safe-area-inset-bottom, 4px);
+  background: #fff; border-top: 1px solid var(--border); z-index: 100;
+  padding: 4px 0 8px; box-shadow: 0 -1px 8px rgba(0,0,0,.04);
 }
 .bottom-nav .nav-items { display: flex; justify-content: space-around; }
-.bottom-nav button {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 6px 8px; font-size: 0.65rem; color: var(--text3); background: none;
-  min-width: 48px;
-}
+.bottom-nav button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 8px; font-size: 0.62rem; color: var(--text3); background: none; min-width: 48px; }
 .bottom-nav button.active { color: var(--accent); }
 .bottom-nav button svg { width: 20px; height: 20px; stroke-width: 1.5; }
 
-/* Tab content */
-.tab-content { display: none; padding-top: 16px; }
+.tab-content { display: none; padding-top: 18px; }
 .tab-content.active { display: block; }
 
-/* Stats bar */
-.stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
-.stat-card {
-  background: var(--surface); border-radius: var(--radius); padding: 14px 16px;
-  border: 1px solid var(--border);
-}
-.stat-card .stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
-.stat-card .stat-label { font-size: 0.75rem; color: var(--text2); margin-top: 2px; }
+.stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border-radius: var(--radius-lg); padding: 18px 20px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.stat-card .stat-value { font-size: 1.7rem; font-weight: 700; line-height: 1.1; }
+.stat-card .stat-label { font-size: 0.76rem; color: var(--text2); margin-top: 4px; }
 .stat-card .stat-value.accent { color: var(--accent); }
 .stat-card .stat-value.green { color: var(--green); }
 .stat-card .stat-value.orange { color: var(--orange); }
+.stat-card .red { color: var(--red); }
+.stat-card.overdue { border: 1px solid var(--red); background: #FEF2F2; }
 
-/* Section headers */
-.section-title {
-  font-size: 0.8rem; font-weight: 600; color: var(--text2); text-transform: uppercase;
-  letter-spacing: 0.5px; margin: 20px 0 10px; padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-}
+.section-title { font-size: 0.78rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.section-title.overdue { color: var(--red); font-weight: 700; }
 
-/* Todo items */
-.todo-item {
-  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-  border-radius: var(--radius); cursor: pointer; transition: background 0.1s;
-  border: 1px solid transparent;
-}
-.todo-item:hover { background: var(--surface2); border-color: var(--border); }
-.todo-item.done { opacity: 0.5; }
-.todo-item.done .todo-title { text-decoration: line-through; }
-.todo-check {
-  width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--text3);
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  transition: all 0.15s;
-}
-.todo-check.checked { background: var(--accent); border-color: var(--accent); }
-.todo-check.checked::after { content: "✓"; color: white; font-size: 11px; }
-.todo-content { flex: 1; min-width: 0; }
-.todo-title { font-size: 0.9rem; }
-.todo-meta { font-size: 0.75rem; color: var(--text3); margin-top: 1px; }
-.badge {
-  display: inline-block; padding: 1px 7px; border-radius: 10px;
-  font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
-}
-.badge.high { background: rgba(248,113,113,0.15); color: var(--red); }
-.badge.medium { background: rgba(251,191,36,0.15); color: var(--orange); }
-.badge.low { background: rgba(52,211,153,0.15); color: var(--green); }
-.badge.ai { background: rgba(167,139,250,0.15); color: var(--purple); }
+.todo-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius); cursor: pointer; background: var(--surface); border: 1px solid var(--border); margin-bottom: 4px; box-shadow: var(--shadow-sm); transition: background .1s; }
+.todo-item:hover { background: var(--surface2); }
+.todo-check { width: 17px; height: 17px; border-radius: 4px; border: 1.5px solid var(--text3); flex-shrink: 0; cursor: pointer; }
+.todo-check:checked { accent-color: var(--accent); }
+.todo-title { flex: 1; font-size: 0.84rem; }
+.todo-title.completed { text-decoration: line-through; color: var(--text3); }
+.todo-priority { font-size: 0.65rem; padding: 1px 6px; border-radius: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: .03em; }
+.todo-priority.high { background: #FEE2E2; color: var(--red); }
+.todo-priority.medium { background: #FEF3C7; color: #D97706; }
+.todo-priority.low { background: var(--surface3); color: var(--text2); }
+.todo-date { font-size: 0.72rem; color: var(--text2); min-width: 55px; text-align: right; }
+.todo-overdue { border-left: 3px solid var(--red); background: #FEF2F2; }
 
-/* Notes feed */
-.note-feed { display: flex; flex-direction: column; gap: 8px; }
-.note-card {
-  background: var(--surface); border-radius: var(--radius); padding: 12px 14px;
-  border: 1px solid var(--border);
-}
-.note-card .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.note-card .note-entity { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
-.note-card .note-date { font-size: 0.7rem; color: var(--text3); }
-.note-card .note-body { font-size: 0.8rem; color: var(--text); max-height: 60px; overflow: hidden; }
-.note-card .note-summary {
-  font-size: 0.8rem; color: var(--purple); margin-top: 8px; padding: 8px;
-  background: rgba(167,139,250,0.05); border-radius: 4px; border-left: 2px solid var(--purple);
-}
+.todo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.todo-grid-col h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); margin-bottom: 8px; font-weight: 600; }
 
-/* Table */
-.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 16px; }
-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-th {
-  text-align: left; padding: 10px 12px; font-size: 0.7rem; font-weight: 600;
-  color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border); white-space: nowrap;
-}
-td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.note-feed .note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; box-shadow: var(--shadow-sm); }
+.note-card .note-body { font-size: 0.82rem; color: var(--text); margin-bottom: 4px; }
+.note-card .note-summary { font-size: 0.78rem; color: var(--accent); background: #EEF2FF; padding: 8px 10px; border-radius: 6px; margin-top: 6px; }
+.note-card .note-meta { font-size: 0.7rem; color: var(--text3); }
+
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar input, .toolbar select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: var(--radius); font-size: 0.82rem; box-shadow: var(--shadow-sm); }
+.toolbar input:focus, .toolbar select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(53,104,229,.1); }
+
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; font-size: 0.82rem; font-weight: 500; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); color: var(--text2); transition: all .15s; box-shadow: var(--shadow-sm); }
+.btn:hover { background: var(--surface2); border-color: var(--text3); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); color: #fff; }
+.btn-danger { color: var(--red); border-color: transparent; }
+.btn-danger:hover { background: #FEE2E2; color: var(--red); }
+.btn-secondary { background: var(--surface); }
+.btn-sm { padding: 5px 10px; font-size: 0.76rem; }
+
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); font-weight: 600; background: var(--surface2); }
+td { color: var(--text); }
 tr:hover td { background: var(--surface2); }
-tr { cursor: pointer; }
 
-/* Search & filter bar */
-.toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-.toolbar input, .toolbar select {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  color: var(--text); padding: 8px 12px; font-size: 0.85rem;
-}
-.toolbar input { flex: 1; min-width: 150px; }
-.toolbar select { min-width: 120px; }
-.toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
+.tag { font-size: 0.7rem; padding: 2px 8px; background: var(--surface2); border-radius: 10px; color: var(--text2); border: 1px solid var(--border); }
+.tag-list { display: flex; gap: 4px; flex-wrap: wrap; }
+.label { font-weight: 600; color: var(--text2); font-size: 0.78rem; }
 
-/* Buttons */
-.btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
-  border-radius: var(--radius); font-size: 0.85rem; font-weight: 500;
-  transition: all 0.15s; white-space: nowrap;
-}
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: var(--accent-dim); }
-.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-.btn-secondary:hover { background: var(--surface3); }
-.btn-danger { background: rgba(248,113,113,0.15); color: var(--red); }
-.btn-danger:hover { background: rgba(248,113,113,0.25); }
-.btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 4px; }
+.badge { font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: .03em; font-weight: 500; }
+.badge.ai { background: #EEF2FF; color: var(--accent); }
+.badge.high { background: #FEE2E2; color: var(--red); }
+.badge.medium { background: #FEF3C7; color: #D97706; }
+.badge.low { background: var(--surface3); color: var(--text2); }
+.type-badge { font-size: 0.7rem; padding: 2px 8px; background: #EEF2FF; color: var(--accent); border-radius: 8px; font-weight: 500; }
 
-/* Kanban */
-.kanban { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
-.kanban-col { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px; }
-.kanban-col h3 {
-  font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-  color: var(--text2); margin-bottom: 10px;
-}
-.kanban-card {
-  background: var(--surface2); border-radius: var(--radius); padding: 12px;
-  margin-bottom: 8px; cursor: pointer; border: 1px solid var(--border);
-  transition: border-color 0.15s;
-}
-.kanban-card:hover { border-color: var(--accent); }
-.kanban-card .card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
-.kanban-card .card-meta { display: flex; gap: 6px; flex-wrap: wrap; }
-.kanban-card .type-badge {
-  padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 600;
-  text-transform: uppercase; background: rgba(79,142,247,0.15); color: var(--accent);
-}
-.kanban-card .size-tag { font-size: 0.7rem; color: var(--text2); }
+.kanban { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.kanban-col { background: var(--surface2); border-radius: var(--radius-lg); padding: 14px; }
+.kanban-col h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); margin-bottom: 10px; }
+.kanban-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; box-shadow: var(--shadow-sm); transition: box-shadow .15s; }
+.kanban-card:hover { box-shadow: var(--shadow-md); }
+.kanban-card .card-name { font-size: 0.84rem; font-weight: 600; }
 
-/* Modals / Slide panels */
-.modal-overlay {
-  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-  z-index: 200; align-items: center; justify-content: center;
-}
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 300; align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border);
-  width: 90%; max-width: 520px; max-height: 85vh; overflow-y: auto; padding: 20px;
-}
-.modal h2 { font-size: 1.1rem; margin-bottom: 16px; }
-.modal .form-group { margin-bottom: 12px; }
-.modal .form-group label { display: block; font-size: 0.75rem; color: var(--text2); margin-bottom: 4px; font-weight: 500; }
-.modal .form-group input, .modal .form-group select, .modal .form-group textarea {
-  width: 100%; padding: 8px 10px; background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--radius); color: var(--text); font-size: 0.85rem;
-}
-.modal .form-group textarea { resize: vertical; min-height: 80px; font-family: inherit; }
-.modal .form-group input:focus, .modal .form-group select:focus, .modal .form-group textarea:focus { border-color: var(--accent); }
-.modal .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; max-width: 560px; width: 94%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 18px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 0.76rem; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: var(--radius); font-size: 0.84rem; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(53,104,229,.08); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
-/* Slide-in detail panel */
-.detail-panel {
-  position: fixed; top: 0; right: -100%; width: 100%; max-width: 480px; height: 100dvh;
-  background: var(--surface); z-index: 300; overflow-y: auto; transition: right 0.25s ease;
-  padding: 20px; border-left: 1px solid var(--border);
-}
-.detail-panel.open { right: 0; }
-.detail-panel .close-btn {
-  position: absolute; top: 12px; right: 12px;
-  background: var(--surface2); border-radius: 50%; width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center; color: var(--text2);
-  font-size: 1.2rem;
-}
-.detail-panel .close-btn:hover { background: var(--surface3); color: var(--text); }
-.detail-overlay {
-  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 299;
-}
+.detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.25); z-index: 250; }
 .detail-overlay.open { display: block; }
+.detail-panel { position: fixed; top: 0; right: -430px; width: 430px; max-width: 94vw; bottom: 0; background: var(--surface); z-index: 260; padding: 24px; overflow-y: auto; transition: right .25s cubic-bezier(.4,0,.2,1); box-shadow: -4px 0 20px rgba(0,0,0,.06); }
+.detail-panel.open { right: 0; }
+.detail-section { margin-top: 18px; }
+.detail-section h4 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); margin-bottom: 8px; }
+.close-btn { position: absolute; top: 16px; right: 16px; background: var(--surface2); border: none; color: var(--text2); width: 30px; height: 30px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.close-btn:hover { background: var(--surface3); color: var(--text); }
 
-/* Tags */
-.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
-.tag {
-  padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 500;
-  background: var(--surface3); color: var(--text2);
-}
+.tag-select { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag-option { padding: 5px 12px; border-radius: 16px; font-size: 0.75rem; cursor: pointer; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); transition: all .12s; }
+.tag-option:hover { border-color: var(--accent); color: var(--accent); }
+.tag-option.selected { background: #EEF2FF; color: var(--accent); border-color: var(--accent); }
 
-/* Tag multi-select */
-.tag-select { display: flex; flex-wrap: wrap; gap: 4px; }
-.tag-select .tag-option {
-  padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; cursor: pointer;
-  background: var(--surface3); color: var(--text2); border: 1px solid transparent;
-  transition: all 0.15s;
-}
-.tag-select .tag-option.selected { background: rgba(79,142,247,0.2); color: var(--accent); border-color: var(--accent); }
-
-/* Tiptap editor */
-.tiptap-editor {
-  background: var(--surface2); border: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius);
-  min-height: 200px; padding: 12px; font-size: 0.9rem; color: var(--text);
-  line-height: 1.6; outline: none;
-}
-.tiptap-editor p { margin-bottom: 8px; }
-.tiptap-editor h1, .tiptap-editor h2, .tiptap-editor h3 { margin: 16px 0 8px; }
-.tiptap-editor ul, .tiptap-editor ol { padding-left: 20px; margin-bottom: 8px; }
-.tiptap-editor blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text2); margin: 8px 0; }
-.tiptap-editor code { background: var(--surface3); padding: 2px 6px; border-radius: 3px; font-family: var(--font-mono); font-size: 0.8rem; }
-.tiptap-toolbar {
-  display: flex; gap: 2px; padding: 6px; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius) var(--radius) 0 0; border-bottom: none; flex-wrap: wrap;
-}
-.tiptap-toolbar button {
-  padding: 4px 8px; background: none; color: var(--text2); border-radius: 4px; font-size: 0.85rem;
-}
-.tiptap-toolbar button:hover { background: var(--surface2); color: var(--text); }
-.tiptap-toolbar button.is-active { background: var(--accent); color: #fff; }
-
-/* Empty state */
-.empty { text-align: center; padding: 40px 20px; color: var(--text3); }
-.empty p { font-size: 0.9rem; }
-
-/* Spinner */
-.spinner {
-  display: inline-block; width: 16px; height: 16px; border: 2px solid var(--text3);
-  border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite;
-  vertical-align: middle; margin-right: 6px;
-}
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,.5); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+.loading-overlay.open { display: flex; }
+.spinner { width: 24px; height: 24px; border: 2.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Loading / overlay */
-.loading-overlay {
-  display: none; position: fixed; inset: 0; background: rgba(15,17,23,0.8);
-  z-index: 400; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
-}
-.loading-overlay.show { display: flex; }
-.loading-overlay .spinner { width: 32px; height: 32px; border-width: 3px; margin-right: 0; }
-
-/* Detail section */
-.detail-section { margin-bottom: 16px; }
-.detail-section h4 { font-size: 0.7rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-.detail-section p { font-size: 0.85rem; margin-bottom: 4px; }
-.detail-section .label { color: var(--text3); font-size: 0.7rem; }
-
-/* Entity picker in notes tab */
-.entity-picker { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
-.entity-picker label { font-size: 0.8rem; color: var(--text2); white-space: nowrap; }
-.entity-picker select {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  color: var(--text); padding: 8px 12px; font-size: 0.85rem; min-width: 150px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .app { padding: 0 8px 80px; }
-  .header { padding: 12px 8px; }
-  .tabs { display: none; }
-  .bottom-nav { display: block; }
-  .kanban { grid-template-columns: 1fr; }
-  .stats-bar { grid-template-columns: repeat(2, 1fr); }
-  .modal { width: 95%; max-width: none; border-radius: var(--radius-lg) var(--radius-lg) 0 0; margin-top: auto; max-height: 90vh; }
-  .modal-overlay { align-items: flex-end; }
-  .detail-panel { max-width: 100%; }
-}
-@media (min-width: 769px) {
-  .bottom-nav { display: none; }
-  .tabs { display: flex; }
-}
-
-/* Inbox / review queue */
-.tab-badge { font-size: 0.65rem; background: var(--accent); color: #fff; border-radius: 8px; padding: 0 5px; margin-left: 2px; }
-.tab-badge:empty { display: none; }
-.nav-badge {
-  position: absolute; top: 2px; right: 50%; transform: translateX(16px);
-  min-width: 15px; height: 15px; padding: 0 4px; background: var(--red); color: #fff;
-  font-size: 0.6rem; line-height: 15px; text-align: center; border-radius: 8px; font-weight: 700;
-}
-.nav-badge:empty { display: none; }
-.ing-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; margin-bottom: 10px; }
+/* Rest of styles unchanged — only theme colors differ */
+.ing-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow-sm); }
 .ing-card .ing-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
 .ing-card .ing-subject { font-weight: 600; font-size: 0.85rem; }
 .ing-card .ing-meta { font-size: 0.7rem; color: var(--text3); }
 .ing-card .ing-summary { font-size: 0.8rem; color: var(--text2); margin: 4px 0 8px; }
 .ing-counts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.ing-pill { font-size: 0.7rem; background: var(--surface3); color: var(--text2); border-radius: 10px; padding: 2px 8px; }
-.ing-status { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 10px; }
-.ing-status.analyzing { background: rgba(79,142,247,0.15); color: var(--accent); }
-.ing-status.pending { background: rgba(251,191,36,0.15); color: var(--orange); }
-.ing-status.approved { background: rgba(52,211,153,0.15); color: var(--green); }
-.ing-status.dismissed { background: var(--surface3); color: var(--text3); }
-.ing-status.error { background: rgba(248,113,113,0.15); color: var(--red); }
+.ing-pill { font-size: 0.7rem; background: var(--surface2); color: var(--text2); border-radius: 10px; padding: 2px 8px; }
+.ing-status { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 10px; }
+.ing-status.analyzing { background: #EEF2FF; color: var(--accent); }
+.ing-status.pending { background: #FEF3C7; color: #D97706; }
+.ing-status.approved { background: #D1FAE5; color: #059669; }
+.ing-status.dismissed { background: var(--surface2); color: var(--text3); }
+.ing-status.error { background: #FEE2E2; color: var(--red); }
 
-/* Review modal proposals */
 .rev-section { margin-bottom: 16px; }
-.rev-section > label.rev-title { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3); margin-bottom: 8px; }
-.prop { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; margin-bottom: 8px; background: var(--surface2); }
+.rev-section > label.rev-title { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); margin-bottom: 8px; }
+.prop { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; margin-bottom: 8px; background: var(--bg); }
 .prop-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .prop-head input[type=checkbox] { width: 16px; height: 16px; flex-shrink: 0; }
 .prop-tag { font-size: 0.65rem; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
-.prop-tag.new { background: rgba(167,139,250,0.18); color: var(--purple); }
-.prop-tag.match { background: rgba(52,211,153,0.18); color: var(--green); }
+.prop-tag.new { background: rgba(139,92,246,.12); color: var(--purple); }
+.prop-tag.match { background: rgba(16,185,129,.12); color: var(--green); }
 .prop-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .prop-fields.single { grid-template-columns: 1fr; }
 .prop input[type=text], .prop select { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); padding: 6px 8px; font-size: 0.8rem; }
 .prop .link-toggle { font-size: 0.72rem; color: var(--text2); display: flex; align-items: center; gap: 5px; margin-top: 6px; }
 .rev-empty { font-size: 0.8rem; color: var(--text3); }
+
+.admin-section { margin-top: 16px; }
+.admin-section details { margin-bottom: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow-sm); }
+.admin-section summary { cursor: pointer; font-size: 0.82rem; color: var(--text); font-weight: 600; padding: 4px 0; }
+.admin-section .csv-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.csv-import-area { margin-top: 10px; }
+.csv-import-area input[type=file] { font-size: 0.8rem; color: var(--text2); margin-right: 8px; }
+.csv-import-area .import-result { font-size: 0.78rem; margin-top: 6px; }
+
+@media (max-width: 860px) {
+  .app { padding: 0 12px 72px; }
+  .bottom-nav { display: block; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  .kanban { grid-template-columns: 1fr; }
+  .detail-panel { width: 100vw; right: -100vw; }
+}
+@media (max-width: 480px) {
+  html { font-size: 13px; }
+  .stats-bar { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-card { padding: 12px 14px; }
+  .stat-card .stat-value { font-size: 1.3rem; }
+}
 </style>
 </head>
 <body>
@@ -404,6 +267,8 @@ tr { cursor: pointer; }
     <button data-tab="dashboard" class="active">Dashboard</button>
     <button data-tab="contacts">Contacts</button>
     <button data-tab="deals">Deals</button>
+    <button data-tab="outreach" style="background:rgba(251,191,36,0.12);color:var(--orange)">📨 Outreach</button>
+    <button data-tab="firms">Firms</button>
     <button data-tab="notes">Notes</button>
     <button data-tab="inbox">Inbox <span class="tab-badge" id="inboxBadgeTop"></span></button>
   </nav>
@@ -417,6 +282,9 @@ tr { cursor: pointer; }
         <button class="btn btn-primary" style="padding:5px 12px;font-size:0.78rem" onclick="openTodoEditor(null)">+ Add task</button>
       </div>
       <div id="todoGroups"></div>
+      <div id="coldFollowups" style="margin-bottom:16px">
+        <button class="btn btn-sm" style="font-size:0.75rem;background:rgba(251,191,36,0.12);color:var(--orange)" onclick="loadColdFollowups()">📬 Check Cold Contacts</button>
+      </div>
       <div class="section-title">Recent Notes</div>
       <div class="note-feed" id="recentNotes"></div>
     </div>
@@ -437,10 +305,59 @@ tr { cursor: pointer; }
 
     <!-- Deals -->
     <div class="tab-content" id="tab-deals">
-      <div style="margin-bottom:12px">
+      <div class="toolbar">
+        <input type="text" id="dealSearch" placeholder="Search deals..." oninput="loadDeals()">
+        <select id="dealTypeFilter" onchange="loadDeals()">
+          <option value="">All types</option>
+          <option value="sell-side">Sell-Side</option>
+          <option value="buy-side">Buy-Side</option>
+          <option value="credit">Credit</option>
+          <option value="independent-sponsor">Independent Sponsor</option>
+        </select>
         <button class="btn btn-primary" onclick="openDealModal()">+ New Deal</button>
+        <select id="dealAssigneeFilter" onchange="loadDeals()" style="min-width:100px">
+          <option value="0">All owners</option>
+          <option value="me">My deals</option>
+        </select>
       </div>
       <div class="kanban" id="kanban"></div>
+      <div id="adminExport" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)"></div>
+    </div>
+
+    <!-- Outreach -->
+    <div class="tab-content" id="tab-outreach">
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+        <select id="outreachRegion" onchange="loadOutreach()"><option value="">All Regions</option></select>
+        <select id="outreachStatus" onchange="loadOutreach()">
+          <option value="">All Status</option>
+          <option value="not_contacted">Not Contacted</option>
+          <option value="emailed">Emailed</option>
+          <option value="replied">Replied</option>
+          <option value="failed">Failed</option>
+        </select>
+        <input type="text" id="outreachSearch" placeholder="Search name/firm..." oninput="loadOutreach()" style="min-width:150px">
+        <button class="btn btn-primary" id="outreachSendBatch" onclick="sendOutreachBatch()">📨 Send All (this filter)</button>
+        <input type="file" id="outreachExcelInput" accept=".xlsx" style="display:none" onchange="importOutreachExcel(this.files[0])">
+        <button class="btn" onclick="document.getElementById('outreachExcelInput').click()">📥 Import Excel</button>
+      </div>
+      <div id="outreachStats" style="margin-bottom:12px;font-size:0.8rem;display:flex;gap:16px;flex-wrap:wrap"></div>
+      <div id="outreachImportStatus" style="margin-bottom:8px;font-size:0.78rem;color:var(--accent)"></div>
+      <div class="table-wrap" style="max-height:calc(100vh - 260px);overflow-y:auto">
+        <table><thead><tr>
+          <th>Name</th><th>Firm</th><th>Title</th><th>Region</th><th>Status</th><th style="width:100px">Action</th>
+        </tr></thead><tbody id="outreachTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Firms -->
+    <div class="tab-content" id="tab-firms">
+      <div class="toolbar">
+        <input type="text" id="firmSearch" placeholder="Search firms..." oninput="loadFirms()">
+        <button class="btn btn-primary" onclick="openFirmModal()">+ Add Firm</button>
+      </div>
+      <div class="table-wrap"><table><thead><tr>
+        <th>Name</th><th>Industry</th><th>Website</th><th>Contacts</th>
+      </tr></thead><tbody id="firmTable"></tbody></table></div>
     </div>
 
     <!-- Notes -->
@@ -506,6 +423,19 @@ tr { cursor: pointer; }
         </p>
       </details>
 
+      <div class="section-title" style="margin-top:24px">WhatsApp Chat</div>
+      <p style="font-size:0.78rem;color:var(--text3);margin-bottom:8px">
+        Export WhatsApp group chat (tap group name → Export Chat → Without Media) and paste here. AI extracts deals, contacts and action items.
+      </p>
+      <input type="text" id="waGroupName" placeholder="Group / chat name (optional)"
+        style="width:100%;margin-bottom:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:8px 12px;font-size:0.85rem">
+      <textarea id="waBody" placeholder="Paste WhatsApp chat export here..."
+        style="width:100%;min-height:140px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:12px;font-size:0.85rem;font-family:inherit;resize:vertical"></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="parseWhatsApp()" id="waParseBtn">📱 Parse WhatsApp</button>
+        <span id="waParseStatus" style="font-size:0.8rem;color:var(--text3)"></span>
+      </div>
+
       <div class="section-title" style="margin-top:24px">Review queue <span id="inboxCount" style="color:var(--text3);font-weight:400"></span></div>
       <div id="inboxList"></div>
     </div>
@@ -524,6 +454,14 @@ tr { cursor: pointer; }
       <button data-tab="deals">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         Deals
+      </button>
+      <button data-tab="outreach">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Outreach
+      </button>
+      <button data-tab="firms">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Firms
       </button>
       <button data-tab="notes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -576,7 +514,9 @@ function switchTab(name) {
   window.location.hash = name;
   if (name === 'dashboard') loadDashboard();
   else if (name === 'contacts') loadContacts();
-  else if (name === 'deals') loadDeals();
+  else if (name === 'deals') { loadDeals(); renderAdminCSV(); }
+  else if (name === 'outreach') loadOutreach();
+  else if (name === 'firms') loadFirms();
   else if (name === 'notes') initNotesTab();
   else if (name === 'inbox') initInboxTab();
 }
@@ -592,7 +532,10 @@ async function loadDashboard() {
     const bar = document.getElementById('statsBar');
     bar.innerHTML =
       '<div class="stat-card"><div class="stat-value accent">' + stats.open_todos + '</div><div class="stat-label">Open Todos</div></div>' +
+      (stats.my_open_todos > 0 ? '<div class="stat-card"><div class="stat-value" style="color:var(--accent)">' + stats.my_open_todos + '</div><div class="stat-label">My Todos</div></div>' : '') +
+      (stats.overdue_todos > 0 ? '<div class="stat-card overdue"><div class="stat-value red">' + stats.overdue_todos + '</div><div class="stat-label">⚠ Overdue</div></div>' : '') +
       '<div class="stat-card"><div class="stat-value green">' + stats.active_deals + '</div><div class="stat-label">Active Deals</div></div>' +
+      (stats.my_active_deals > 0 ? '<div class="stat-card"><div class="stat-value" style="color:var(--green)">' + stats.my_active_deals + '</div><div class="stat-label">My Deals</div></div>' : '') +
       '<div class="stat-card"><div class="stat-value orange">' + stats.total_contacts + '</div><div class="stat-label">Contacts</div></div>';
 
     // Todos: open ones grouped by due date, completed ones kept crossed off below.
@@ -602,13 +545,15 @@ async function loadDashboard() {
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 25);
     const today = new Date(); today.setHours(23,59,59,999);
+    const now = new Date();
     const weekEnd = new Date(today.getTime() + 7*86400000);
-    const todayTodos = [], weekTodos = [], laterTodos = [];
+    const overdueTodos = [], todayTodos = [], weekTodos = [], laterTodos = [];
 
     openTodos.forEach(t => {
       if (!t.due_date) { laterTodos.push(t); return; }
       const d = new Date(t.due_date);
-      if (d <= today) todayTodos.push(t);
+      if (d < now) overdueTodos.push(t);
+      else if (d <= today) todayTodos.push(t);
       else if (d <= weekEnd) weekTodos.push(t);
       else laterTodos.push(t);
     });
@@ -617,15 +562,17 @@ async function loadDashboard() {
     todoCache = {};
     allTodos.forEach(function(t) { todoCache[t.id] = t; });
 
-    function renderGroup(title, items) {
+    function renderGroup(title, items, extraClass) {
       if (!items.length) return '';
-      return '<div class="section-title">' + title + ' (' + items.length + ')</div>' +
+      var cls = extraClass ? ' class="' + extraClass + '"' : '';
+      return '<div class="section-title"' + cls + '>' + title + ' (' + items.length + ')</div>' +
         items.map(function(t) {
+          var rowClass = extraClass ? ' todo-overdue' : '';
           let metaHtml = '';
           if (t.due_date) metaHtml += fmtDueDate(t.due_date);
           if (t.linked_entity_type) metaHtml += (metaHtml ? ' · ' : '') + esc(t.linked_entity_type) + ' #' + t.linked_entity_id;
           if (t.source === 'ai') metaHtml += (metaHtml ? ' ' : '') + '<span class="badge ai">AI</span>';
-          return '<div class="todo-item' + (t.status === 'done' ? ' done' : '') + '">' +
+          return '<div class="todo-item' + (t.status === 'done' ? ' done' : '') + rowClass + '">' +
             '<div class="todo-check' + (t.status === 'done' ? ' checked' : '') + '" onclick="event.stopPropagation(); toggleTodo(' + t.id + ',\'' + t.status + '\')"></div>' +
             '<div class="todo-content" onclick="openTodoEditor(' + t.id + ')">' +
               '<div class="todo-title">' + esc(t.title) + '</div>' +
@@ -637,6 +584,7 @@ async function loadDashboard() {
     }
 
     document.getElementById('todoGroups').innerHTML =
+      renderGroup('⚠ Overdue', overdueTodos, 'overdue') +
       renderGroup('Today', todayTodos) +
       renderGroup('This Week', weekTodos) +
       renderGroup('Later', laterTodos) +
@@ -680,6 +628,7 @@ function openTodoEditor(id) {
   var title = t ? t.title : '';
   var due = (t && t.due_date) ? String(t.due_date).slice(0, 10) : '';
   var priority = t ? t.priority : 'medium';
+  var assignee = (t && t.assigned_to_user_id) ? t.assigned_to_user_id : 0;
 
   var html =
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
@@ -696,6 +645,8 @@ function openTodoEditor(id) {
         '<option value="medium"' + (priority === 'medium' ? ' selected' : '') + '>Medium</option>' +
         '<option value="low"' + (priority === 'low' ? ' selected' : '') + '>Low</option>' +
       '</select></div>' +
+    '<div class="form-group"><label>Assign to</label>' +
+      '<select id="todoAssignee"><option value="0">Unassigned</option></select></div>' +
     '<div id="todoEditMsg" style="font-size:0.78rem;color:var(--red);margin-bottom:8px"></div>' +
     '<div style="display:flex;gap:8px;margin-top:6px">' +
       '<button class="btn btn-primary" style="flex:1" onclick="saveTodoEdit(' + (isNew ? 'null' : id) + ')">Save</button>' +
@@ -704,22 +655,41 @@ function openTodoEditor(id) {
 
   document.getElementById('modalContent').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('open');
+  // Load users into assignee dropdown
+  loadTodoAssigneeList(assignee);
   var ti = document.getElementById('todoTitle');
   ti.focus();
 }
 
+async function loadTodoAssigneeList(selectedId) {
+  if (!currentUser || !currentUser.is_admin) return;
+  try {
+    var users = await api('/users');
+    var sel = document.getElementById('todoAssignee');
+    if (!sel) return;
+    sel.innerHTML = '<option value="0">Unassigned</option>' +
+      users.map(function(u) {
+        return '<option value="' + u.id + '"' + (u.id === selectedId ? ' selected' : '') + '>' + esc(u.username) + '</option>';
+      }).join('');
+  } catch(e) {}
+}
+
 async function saveTodoEdit(id) {
   var title = document.getElementById('todoTitle').value.trim();
-  var due = document.getElementById('todoDue').value;   // 'YYYY-MM-DD' or ''
+  var due = document.getElementById('todoDue').value;
   var priority = document.getElementById('todoPriority').value;
+  var assigneeEl = document.getElementById('todoAssignee');
+  var assigned_to = assigneeEl ? parseInt(assigneeEl.value) || null : null;
   var msg = document.getElementById('todoEditMsg');
   if (!title) { msg.textContent = 'Title is required'; return; }
   showLoading(true);
   try {
+    var body = { title: title, due_date: due || null, priority: priority };
+    if (assigned_to) body.assigned_to_user_id = assigned_to;
     if (id == null) {
-      await api('/todos', { method: 'POST', body: JSON.stringify({ title: title, due_date: due || null, priority: priority }) });
+      await api('/todos', { method: 'POST', body: JSON.stringify(body) });
     } else {
-      await api('/todos/' + id, { method: 'PUT', body: JSON.stringify({ title: title, due_date: due, priority: priority }) });
+      await api('/todos/' + id, { method: 'PUT', body: JSON.stringify(body) });
     }
     closeModal();
     await loadDashboard();
@@ -856,8 +826,14 @@ function openContactModal(id) {
       '<div class="form-group"><label>Name *</label><input id="cName" required></div>' +
       '<div class="form-group"><label>Email</label><input type="email" id="cEmail"></div>' +
       '<div class="form-group"><label>Phone</label><input id="cPhone"></div>' +
-      '<div class="form-group"><label>Firm</label><input id="cFirm"></div>' +
+      '<div class="form-group"><label>Firm</label><input id="cFirm" list="firmList" placeholder="Type or select..."><datalist id="firmList"></datalist></div>' +
       '<div class="form-group"><label>Title</label><input id="cTitle"></div>' +
+      '<div class="form-group"><label>Relationship Tier</label><select id="cTier">' +
+        '<option value="">None</option>' +
+        '<option value="A">A - Core</option>' +
+        '<option value="B">B - Regular</option>' +
+        '<option value="C">C - Occasional</option>' +
+      '</select></div>' +
       '<div class="form-group"><label>Tags</label><div class="tag-select" id="cTags">' +
         TAGS.map(function(t) { return '<span class="tag-option" data-tag="' + t + '" onclick="toggleTag(this)">' + t + '</span>'; }).join('') +
       '</div></div>' +
@@ -869,6 +845,9 @@ function openContactModal(id) {
     '</form>';
   document.getElementById('modalOverlay').classList.add('open');
 
+  // Populate firm datalist
+  loadFirmDatalist();
+
   if (isEdit) {
     api('/contacts/' + id).then(function(c) {
       document.getElementById('cName').value = c.name || '';
@@ -876,6 +855,7 @@ function openContactModal(id) {
       document.getElementById('cPhone').value = c.phone || '';
       document.getElementById('cFirm').value = c.firm || '';
       document.getElementById('cTitle').value = c.title || '';
+      document.getElementById('cTier').value = c.relationship_tier || '';
       document.getElementById('cSummaryText').value = c.summary_text || '';
       (c.tags || []).forEach(function(t) {
         var el = document.querySelector('#cTags .tag-option[data-tag="' + t + '"]');
@@ -892,9 +872,16 @@ function openContactModal(id) {
       phone: document.getElementById('cPhone').value,
       firm: document.getElementById('cFirm').value,
       title: document.getElementById('cTitle').value,
+      relationship_tier: document.getElementById('cTier').value,
       tags: Array.from(document.querySelectorAll('#cTags .tag-option.selected')).map(function(el) { return el.dataset.tag; }),
       summary_text: document.getElementById('cSummaryText').value,
     };
+    // If firm matches an existing firm, auto-link via firm_id
+    var firmVal = data.firm.trim();
+    if (firmVal && firmCache) {
+      var matched = firmCache.find(function(f) { return f.name.toLowerCase() === firmVal.toLowerCase(); });
+      if (matched) data.firm_id = matched.id;
+    }
     showLoading(true);
     try {
       if (isEdit) await api('/contacts/' + id, { method: 'PUT', body: JSON.stringify(data) });
@@ -906,12 +893,32 @@ function openContactModal(id) {
   });
 }
 
+var firmCache = [];
+async function loadFirmDatalist() {
+  try {
+    firmCache = await api('/firms');
+    var dl = document.getElementById('firmList');
+    if (!dl) return;
+    dl.innerHTML = firmCache.map(function(f) { return '<option value="' + esc(f.name) + '">'; }).join('');
+  } catch(e) { firmCache = []; }
+}
+
 window.toggleTag = function(el) { el.classList.toggle('selected'); };
 
 // ─── Deals ───
 async function loadDeals() {
   try {
-    var deals = await api('/deals');
+    var typeEl = document.getElementById('dealTypeFilter');
+    var searchEl = document.getElementById('dealSearch');
+    var assigneeEl = document.getElementById('dealAssigneeFilter');
+    var params = new URLSearchParams();
+    if (typeEl && typeEl.value) params.set('type', typeEl.value);
+    if (searchEl && searchEl.value) params.set('search', searchEl.value);
+    if (assigneeEl && assigneeEl.value === 'me' && currentUser) {
+      params.set('assignee_user_id', currentUser.id);
+    }
+    var qs = params.toString();
+    var deals = await api('/deals' + (qs ? '?' + qs : ''));
     var stages = { prospect: [], active: [], closed: [], dead: [] };
     deals.forEach(function(d) { if (stages[d.stage]) stages[d.stage].push(d); });
     document.getElementById('kanban').innerHTML = Object.entries(stages).map(function(entry) {
@@ -947,6 +954,7 @@ async function openDealDetail(id) {
     }
     var notes = await api('/notes?entity_type=deal&entity_id=' + id);
     var todos = await api('/todos?entity_type=deal&entity_id=' + id);
+    var attachments = await api('/attachments?entity_type=deal&entity_id=' + id);
     var openTodos = todos.filter(function(t) { return t.status === 'open'; });
 
     document.getElementById('detailPanel').innerHTML =
@@ -956,6 +964,9 @@ async function openDealDetail(id) {
         '<span class="type-badge">' + (DEAL_TYPE_LABELS[deal.type] || deal.type) + '</span>' +
         ' <span class="badge" style="background:rgba(79,142,247,0.15);color:var(--accent)">' + deal.stage + '</span>' +
         (deal.size_mm ? ' <span style="color:var(--green)">$' + deal.size_mm + 'M</span>' : '') +
+        (deal.expected_fee ? ' <span style="color:var(--accent)">Fee $' + deal.expected_fee + 'K</span>' : '') +
+        (deal.fee_type ? ' <span style="color:var(--text2)">(' + deal.fee_type + ')</span>' : '') +
+        (deal.assignee_user_id ? ' <span class="badge ai">👤 #' + deal.assignee_user_id + '</span>' : '') +
       '</p>' +
       '<div class="detail-section">' +
         '<h4>Details</h4>' +
@@ -967,8 +978,12 @@ async function openDealDetail(id) {
         '<div style="margin-top:8px">' +
           '<button class="btn btn-secondary btn-sm" onclick="openDealModal(' + deal.id + ')">Edit</button>' +
           '<button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="deleteDeal(' + deal.id + ')">Delete</button>' +
+          '<button class="btn btn-sm" style="margin-left:4px;background:rgba(167,139,250,0.18);color:var(--purple)" onclick="aiGeneratePitch(' + deal.id + ')">🤖 AI Pitch</button>' +
+          '<button class="btn btn-sm" style="margin-left:4px;background:rgba(52,211,153,0.15);color:var(--green)" onclick="aiGenerateBriefing(' + deal.id + ')">📋 AI Briefing</button>' +
         '</div>' +
       '</div>' +
+      '<div id="aiResult" style="margin:8px 0;padding:10px;background:var(--surface2);border-radius:var(--radius);display:none"></div>' +
+      (renderMilestones(deal.milestones || [], deal.id) || '') +
       '<div class="detail-section">' +
         '<h4>Notes (' + notes.length + ')</h4>' +
         (notes.length ?
@@ -987,6 +1002,23 @@ async function openDealDetail(id) {
             return '<p><span class="badge ' + t.priority + '">' + t.priority + '</span> ' + esc(t.title) + '</p>';
           }).join('') :
           '<p style="color:var(--text3)">None</p>') +
+      '</div>' +
+      '<div class="detail-section">' +
+        '<h4>Files (' + attachments.length + ')</h4>' +
+        (attachments.length ?
+          attachments.map(function(a) {
+            return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:0.82rem">' +
+              '<span>📎</span>' +
+              '<a href="/attachments/' + a.id + '/download" style="flex:1" download>' + esc(a.original_filename) + '</a>' +
+              '<span style="color:var(--text3);font-size:0.7rem">' + (a.file_size > 1024 ? (a.file_size/1024).toFixed(0) + 'KB' : a.file_size + 'B') + '</span>' +
+              '<button class="btn btn-sm" style="font-size:0.6rem;padding:2px 6px;color:var(--red)" onclick="event.stopPropagation();deleteAttachment(' + a.id + ',' + deal.id + ')">✕</button>' +
+            '</div>';
+          }).join('') :
+          '<p style="color:var(--text3)">No files</p>') +
+        '<div style="margin-top:6px">' +
+          '<input type="file" id="dealFileInput" style="display:none" onchange="uploadDealFile(this,' + deal.id + ')">' +
+          '<button class="btn btn-sm" onclick="document.getElementById(\'dealFileInput\').click()">+ Upload file</button>' +
+        '</div>' +
       '</div>';
     document.getElementById('detailPanel').classList.add('open');
     document.getElementById('detailOverlay').classList.add('open');
@@ -1001,9 +1033,660 @@ async function deleteDeal(id) {
   loadDeals();
 }
 
+// ─── Attachments ───
+async function uploadDealFile(input, dealId) {
+  if (!input.files || !input.files.length) return;
+  var file = input.files[0];
+  var formData = new FormData();
+  formData.append('file', file);
+  showLoading(true);
+  try {
+    var resp = await fetch('/attachments?entity_type=deal&entity_id=' + dealId, { method: 'POST', body: formData });
+    if (!resp.ok) throw new Error('Upload failed');
+    closeDetail();
+    openDealDetail(dealId);
+  } catch(e) { alert(e.message); }
+  showLoading(false);
+  input.value = '';
+}
+
+async function deleteAttachment(attId, dealId) {
+  if (!confirm('Delete this file?')) return;
+  await api('/attachments/' + attId, { method: 'DELETE' });
+  closeDetail();
+  openDealDetail(dealId);
+}
+
+// ─── Milestones ───
+var MILESTONE_NAMES = ['NDA Signed', 'IOI Sent', 'LOI Received', 'Due Diligence', 'SPA Negotiation', 'Closing'];
+
+function renderMilestones(milestones, dealId) {
+  if (!milestones || !milestones.length) return '';
+  var html = '<div class="detail-section"><h4>Milestones</h4>';
+  milestones.forEach(function(m, i) {
+    var done = m.done || m.status === 'completed';
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:0.82rem">' +
+      '<input type="checkbox" ' + (done ? 'checked' : '') +
+      ' onchange="toggleMilestone(' + dealId + ',' + i + ',this.checked)" style="width:14px;height:14px">' +
+      '<span style="' + (done ? 'text-decoration:line-through;color:var(--text3)' : '') + '">' + esc(m.name) + '</span>' +
+      (m.date ? '<span style="color:var(--text3);font-size:0.7rem">' + fmtDate(m.date) + '</span>' : '') +
+    '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+async function toggleMilestone(dealId, index, checked) {
+  try {
+    var deal = await api('/deals/' + dealId);
+    var milestones = deal.milestones || [];
+    if (index < milestones.length) {
+      milestones[index].done = checked;
+      if (checked && !milestones[index].date) {
+        milestones[index].date = new Date().toISOString();
+      }
+      await api('/deals/' + dealId, { method: 'PUT', body: JSON.stringify({ milestones: milestones }) });
+    }
+  } catch(e) { console.error(e); }
+}
+
+function renderMilestoneEditor(dealId) {
+  var html = '<div class="form-group"><label>Milestones</label>';
+  MILESTONE_NAMES.forEach(function(name) {
+    html += '<label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;padding:2px 0;cursor:pointer">' +
+      '<input type="checkbox" class="mstone-check" data-name="' + esc(name) + '" style="width:14px;height:14px">' +
+      esc(name) + '</label>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function collectMilestonesFromForm() {
+  var checks = document.querySelectorAll('.mstone-check');
+  var milestones = [];
+  checks.forEach(function(cb) {
+    milestones.push({ name: cb.dataset.name, done: cb.checked, date: cb.checked ? new Date().toISOString() : null });
+  });
+  return milestones;
+}
+
+// ─── Audit Log viewer (admin) ───
+function renderAuditLog() {
+  var el = document.getElementById('adminExport');
+  if (!el || !currentUser || !currentUser.is_admin) return;
+  var existing = el.innerHTML || '';
+  el.innerHTML = existing +
+    '<div class="admin-section">' +
+      '<details>' +
+        '<summary>📝 Audit Log</summary>' +
+        '<div style="margin-top:8px;max-height:300px;overflow-y:auto" id="auditLogList">' +
+          '<button class="btn btn-sm" onclick="loadAuditLog()">Load log</button>' +
+        '</div>' +
+      '</details>' +
+    '</div>';
+}
+
+async function loadAuditLog() {
+  try {
+    var logs = await api('/admin/audit-log?limit=50');
+    document.getElementById('auditLogList').innerHTML = logs.length ?
+      logs.map(function(l) {
+        return '<div style="font-size:0.72rem;padding:4px 0;border-bottom:1px solid var(--border)">' +
+          '<span style="color:var(--text3)">' + fmtDate(l.created_at) + '</span> ' +
+          '<span style="color:var(--accent)">' + esc(l.username) + '</span> ' +
+          '<span style="color:var(--orange)">' + esc(l.action) + '</span> ' +
+          '<span>(' + esc(l.entity_type) + '#' + (l.entity_id || '') + ')</span> ' +
+          '<span style="color:var(--text2)">' + esc(l.detail || '') + '</span>' +
+        '</div>';
+      }).join('') :
+      '<p style="color:var(--text3)">No audit entries</p>';
+  } catch(e) { console.error(e); }
+}
+
+// ─── AI Tools ───
+async function aiGeneratePitch(dealId) {
+  var el = document.getElementById('aiResult');
+  el.style.display = 'block';
+  el.innerHTML = '<span class="spinner"></span> AI generating pitch...';
+  try {
+    var resp = await api('/ai/deal-pitch/' + dealId, { method: 'POST' });
+    el.innerHTML = '<div style="font-size:0.85rem;color:var(--purple);margin-bottom:4px">🤖 AI Elevator Pitch</div>' +
+      '<p style="font-size:0.85rem;line-height:1.6">' + esc(resp.pitch) + '</p>';
+  } catch(e) {
+    el.innerHTML = '<span style="color:var(--red)">AI unavailable: ' + esc(e.message) + '</span>';
+  }
+}
+
+async function aiGenerateBriefing(dealId) {
+  var el = document.getElementById('aiResult');
+  el.style.display = 'block';
+  el.innerHTML = '<span class="spinner"></span> AI generating briefing...';
+  try {
+    var resp = await api('/ai/deal-briefing/' + dealId, { method: 'POST' });
+    var html = '<div style="font-size:0.85rem;color:var(--green);margin-bottom:4px">📋 AI Deal Briefing</div>';
+    html += '<p style="font-size:0.85rem;margin-bottom:6px">' + esc(resp.summary) + '</p>';
+    if (resp.key_points && resp.key_points.length) {
+      html += '<div style="font-size:0.82rem;margin-bottom:6px"><strong>Key Points:</strong></div>';
+      html += '<ul style="margin:0 0 6px 16px;font-size:0.8rem">';
+      resp.key_points.forEach(function(p) { html += '<li>' + esc(p) + '</li>'; });
+      html += '</ul>';
+    }
+    if (resp.next_actions) {
+      html += '<div style="font-size:0.82rem;margin-bottom:4px"><strong>Next:</strong> ' + esc(resp.next_actions) + '</div>';
+    }
+    if (resp.risk_flag) {
+      html += '<div style="font-size:0.8rem;color:var(--orange);margin-top:4px">⚠ ' + esc(resp.risk_flag) + '</div>';
+    }
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<span style="color:var(--red)">AI unavailable: ' + esc(e.message) + '</span>';
+  }
+}
+
+async function loadColdFollowups() {
+  var el = document.getElementById('coldFollowups');
+  if (!el) return;
+  try {
+    el.innerHTML = '<span class="spinner"></span> Scanning for quiet contacts...';
+    var resp = await api('/ai/cold-followups', { method: 'POST' });
+    if (!resp.contacts || !resp.contacts.length) {
+      el.innerHTML = '<p style="color:var(--text3);font-size:0.82rem">No A-tier contacts without recent contact.</p>';
+      return;
+    }
+    var html = '<div style="font-size:0.85rem;color:var(--orange);margin-bottom:6px">📬 A-tier contacts not contacted in 90+ days</div>';
+    resp.contacts.forEach(function(c) {
+      html += '<div style="font-size:0.8rem;padding:6px 0;border-bottom:1px solid var(--border)">' +
+        '<strong>' + esc(c.name) + '</strong>' +
+        (c.firm ? ' — ' + esc(c.firm) : '') +
+        (c.last_contacted_at ? ' (last: ' + fmtDate(c.last_contacted_at) + ')' : ' (never contacted)') +
+        (c.draft_email ? '<div style="margin-top:4px;padding:8px;background:var(--surface);border-radius:4px;font-size:0.78rem;white-space:pre-wrap">' + esc(c.draft_email) + '</div>' : '') +
+      '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<span style="color:var(--red)">Error: ' + esc(e.message) + '</span>';
+  }
+}
+
+// ─── Firms ───
+async function loadFirms() {
+  var search = document.getElementById('firmSearch') ? document.getElementById('firmSearch').value : '';
+  var params = search ? '?search=' + encodeURIComponent(search) : '';
+  try {
+    var firms = await api('/firms' + params);
+    // Also load contacts to show count
+    var contacts = await api('/contacts');
+    var firmContacts = {};
+    contacts.forEach(function(c) { if (c.firm_id) { firmContacts[c.firm_id] = (firmContacts[c.firm_id] || 0) + 1; } });
+    document.getElementById('firmTable').innerHTML = firms.length ?
+      firms.map(function(f) {
+        var count = firmContacts[f.id] || 0;
+        return '<tr onclick="openFirmDetail(' + f.id + ')" style="cursor:pointer">' +
+          '<td><strong>' + esc(f.name) + '</strong></td>' +
+          '<td>' + esc(f.industry || '') + '</td>' +
+          '<td>' + (f.website ? '<a href="' + esc(f.website) + '" target="_blank" onclick="event.stopPropagation()">' + esc(f.website) + '</a>' : '') + '</td>' +
+          '<td>' + count + '</td>' +
+        '</tr>';
+      }).join('') :
+      '<tr><td colspan="4" class="empty" style="padding:20px"><p>No firms yet</p></td></tr>';
+  } catch(e) { console.error(e); }
+}
+
+function openFirmModal(id) {
+  var isEdit = !!id;
+  var modal = document.getElementById('modalContent');
+  modal.innerHTML =
+    '<h2>' + (isEdit ? 'Edit' : 'New') + ' Firm</h2>' +
+    '<form id="firmForm">' +
+      '<div class="form-group"><label>Firm Name *</label><input id="fName" required></div>' +
+      '<div class="form-group"><label>Industry</label><input id="fIndustry"></div>' +
+      '<div class="form-group"><label>Website</label><input id="fWebsite" placeholder="https://..."></div>' +
+      '<div class="form-group"><label>Notes</label><textarea id="fNotes"></textarea></div>' +
+      '<div class="modal-actions">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update' : 'Create') + '</button>' +
+      '</div>' +
+    '</form>';
+  document.getElementById('modalOverlay').classList.add('open');
+
+  if (isEdit) {
+    api('/firms/' + id).then(function(f) {
+      document.getElementById('fName').value = f.name || '';
+      document.getElementById('fIndustry').value = f.industry || '';
+      document.getElementById('fWebsite').value = f.website || '';
+      document.getElementById('fNotes').value = f.notes_text || '';
+    });
+  }
+
+  document.getElementById('firmForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var data = {
+      name: document.getElementById('fName').value,
+      industry: document.getElementById('fIndustry').value,
+      website: document.getElementById('fWebsite').value,
+      notes_text: document.getElementById('fNotes').value,
+    };
+    showLoading(true);
+    try {
+      if (isEdit) await api('/firms/' + id, { method: 'PUT', body: JSON.stringify(data) });
+      else await api('/firms', { method: 'POST', body: JSON.stringify(data) });
+      closeModal();
+      loadFirms();
+    } catch(err) { alert(err.message); }
+    showLoading(false);
+  });
+}
+
+async function openFirmDetail(id) {
+  showLoading(true);
+  try {
+    var firm = await api('/firms/' + id);
+    var contacts = await api('/contacts');
+    var linkedContacts = contacts.filter(function(c) { return c.firm_id === id; });
+
+    document.getElementById('detailPanel').innerHTML =
+      '<button class="close-btn" onclick="closeDetail()">\u2715</button>' +
+      '<h2 style="font-size:1.1rem;margin-bottom:2px">' + esc(firm.name) + '</h2>' +
+      (firm.industry ? '<p style="color:var(--text2)">' + esc(firm.industry) + '</p>' : '') +
+      (firm.website ? '<p style="font-size:0.85rem"><a href="' + esc(firm.website) + '" target="_blank">' + esc(firm.website) + '</a></p>' : '') +
+      (firm.notes_text ? '<p style="font-size:0.8rem;color:var(--text2)">' + esc(firm.notes_text) + '</p>' : '') +
+      '<div style="margin-top:12px">' +
+        '<button class="btn btn-secondary btn-sm" onclick="openFirmModal(' + firm.id + ')">Edit</button>' +
+        '<button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="deleteFirm(' + firm.id + ')">Delete</button>' +
+      '</div>' +
+      '<div class="detail-section" style="margin-top:12px">' +
+        '<h4>Contacts (' + linkedContacts.length + ')</h4>' +
+        (linkedContacts.length ?
+          linkedContacts.map(function(c) {
+            return '<p style="font-size:0.85rem;cursor:pointer" onclick="openContactModal(' + c.id + ')">' + esc(c.name) + (c.title ? ' - ' + esc(c.title) : '') + '</p>';
+          }).join('') :
+          '<p style="color:var(--text3)">No contacts linked</p>') +
+      '</div>';
+    document.getElementById('detailPanel').classList.add('open');
+    document.getElementById('detailOverlay').classList.add('open');
+  } catch(e) { console.error(e); }
+  showLoading(false);
+}
+
+async function deleteFirm(id) {
+  if (!confirm('Delete this firm? Contacts will be unlinked.')) return;
+  await api('/firms/' + id, { method: 'DELETE' });
+  closeDetail();
+  loadFirms();
+}
+
+// ─── CSV Export / Import (admin only) ───
+function renderAdminCSV() {
+  var el = document.getElementById('adminExport');
+  if (!el) return;
+  if (!currentUser || !currentUser.is_admin) { el.innerHTML = ''; return; }
+  el.innerHTML =
+    '<div class="admin-section">' +
+      '<details>' +
+        '<summary>📋 CSV Export / Import (admin)</summary>' +
+        '<div class="csv-btns">' +
+          '<button class="btn btn-secondary btn-sm" onclick="exportCSV(\'contacts\')">📥 Export Contacts</button>' +
+          '<button class="btn btn-secondary btn-sm" onclick="exportCSV(\'deals\')">📥 Export Deals</button>' +
+          '<button class="btn btn-secondary btn-sm" onclick="exportCSV(\'todos\')">📥 Export Todos</button>' +
+        '</div>' +
+        '<div class="csv-import-area" style="margin-top:12px">' +
+          '<p style="font-size:0.75rem;color:var(--text3);margin-bottom:6px">Import contacts from CSV (columns: name, email, phone, firm, title, tags)</p>' +
+          '<input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="importCSV(this.files[0])">' +
+          '<button class="btn btn-sm" onclick="document.getElementById(\'csvFileInput\').click()">📤 Import Contacts CSV</button>' +
+          '<div class="import-result" id="importResult"></div>' +
+        '</div>' +
+      '</details>' +
+    '</div>' +
+    '<div class="admin-section">' +
+      '<details>' +
+        '<summary>📝 Audit Log</summary>' +
+        '<div style="margin-top:8px;max-height:300px;overflow-y:auto" id="auditLogList">' +
+          '<button class="btn btn-sm" onclick="loadAuditLog()">Load log</button>' +
+        '</div>' +
+      '</details>' +
+    '</div>' +
+    '<div class="admin-section">' +
+      '<details>' +
+        '<summary>📧 Email Campaigns</summary>' +
+        '<div style="margin-top:8px" id="campaignPanel">' +
+          '<button class="btn btn-sm" onclick="loadCampaigns()">Load campaigns</button>' +
+          ' <button class="btn btn-primary btn-sm" onclick="openCampaignModal()">+ New Campaign</button>' +
+          ' <button class="btn btn-sm" onclick="openTemplateModal()">+ Template</button>' +
+          '<div id="campaignList" style="margin-top:8px"></div>' +
+        '</div>' +
+      '</details>' +
+    '</div>';
+}
+
+async function exportCSV(type) {
+  showLoading(true);
+  try {
+    var resp = await fetch('/admin/export/' + type);
+    if (!resp.ok) throw new Error('Export failed');
+    var blob = await resp.blob();
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = type + '_export.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (e) { alert('Export error: ' + e.message); }
+  showLoading(false);
+}
+
+async function importCSV(file) {
+  if (!file) return;
+  if (!confirm('Import contacts from ' + file.name + '?')) {
+    document.getElementById('csvFileInput').value = '';
+    return;
+  }
+  showLoading(true);
+  var resultEl = document.getElementById('importResult');
+  resultEl.innerHTML = '';
+  var formData = new FormData();
+  formData.append('file', file);
+  try {
+    var resp = await fetch('/admin/import/contacts', { method: 'POST', body: formData });
+    var data = await resp.json();
+    if (data.ok) {
+      resultEl.innerHTML = '<span style="color:var(--green)">✅ Created: ' + data.created + ', Skipped: ' + data.skipped + '</span>';
+      if (data.created > 0) setTimeout(loadContacts, 500);
+    } else {
+      resultEl.innerHTML = '<span style="color:var(--red)">Import failed: ' + (data.detail || '') + '</span>';
+    }
+    if (data.errors && data.errors.length) {
+      resultEl.innerHTML += '<br><span style="color:var(--orange)">' + data.errors.join('<br>') + '</span>';
+    }
+  } catch (e) { resultEl.innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+  showLoading(false);
+  document.getElementById('csvFileInput').value = '';
+}
+
+// ─── Email Campaigns ───
+var campaignTemplates = [];
+
+async function loadCampaigns() {
+  try {
+    var campaigns = await api('/admin/campaigns');
+    campaignTemplates = await api('/admin/campaigns/templates');
+    var el = document.getElementById('campaignList');
+    if (!campaigns.length) {
+      el.innerHTML = '<p style="color:var(--text3);font-size:0.8rem">No campaigns yet.</p>';
+      return;
+    }
+    el.innerHTML = campaigns.map(function(c) {
+      var statusLabel = c.status === 'draft' ? '⏳ Draft' : c.status === 'ready' ? '✅ Ready' : c.status === 'sending' ? '🔄 Sending' : '📨 Sent';
+      return '<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:0.82rem">' +
+        '<strong>' + esc(c.name) + '</strong> ' +
+        '<span style="color:var(--text3)">' + statusLabel + '</span> ' +
+        (c.target_count ? '<span style="color:var(--text2)">(' + c.sent_count + '/' + c.target_count + ')</span>' : '') +
+        '<div style="margin-top:4px">' +
+          (c.status === 'draft' ? '<button class="btn btn-sm" onclick="openCampaignModal(' + c.id + ')">Edit</button> ' : '') +
+          (c.status === 'draft' ? '<button class="btn btn-sm" style="color:var(--green)" onclick="generateCampaign(' + c.id + ')">Generate</button> ' : '') +
+          (c.status === 'ready' ? '<button class="btn btn-primary btn-sm" onclick="sendCampaign(' + c.id + ')">📨 Send All</button> ' : '') +
+          (c.sent_count > 0 ? '<button class="btn btn-sm" onclick="viewSendLog(' + c.id + ')">View log</button> ' : '') +
+          '<button class="btn btn-sm" style="color:var(--red)" onclick="deleteCampaign_' + c.id + '()">Delete</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+function openTemplateModal(id) {
+  var isEdit = !!id;
+  var modal = document.getElementById('modalContent');
+  modal.innerHTML =
+    '<h2>' + (isEdit ? 'Edit' : 'New') + ' Template</h2>' +
+    '<form id="tmplForm">' +
+      '<div class="form-group"><label>Template Name *</label><input id="tmplName" required></div>' +
+      '<div class="form-group"><label>Subject *</label><input id="tmplSubject" required placeholder="Use {contact_name}, {firm} as variables"></div>' +
+      '<div class="form-group"><label>Body</label><textarea id="tmplBody" style="min-height:120px" placeholder="Dear {contact_name},..."></textarea></div>' +
+      '<p style="font-size:0.7rem;color:var(--text3);margin-bottom:8px">Variables: {contact_name}, {firm}, {tier}</p>' +
+      '<div class="modal-actions">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update' : 'Create') + '</button>' +
+      '</div>' +
+    '</form>';
+  document.getElementById('modalOverlay').classList.add('open');
+
+  if (isEdit) {
+    var t = campaignTemplates.find(function(x) { return x.id === id; });
+    if (t) {
+      document.getElementById('tmplName').value = t.name;
+      document.getElementById('tmplSubject').value = t.subject;
+      document.getElementById('tmplBody').value = t.body_template;
+    }
+  }
+  document.getElementById('tmplForm').onsubmit = async function(e) {
+    e.preventDefault();
+    var data = { name: document.getElementById('tmplName').value, subject: document.getElementById('tmplSubject').value, body_template: document.getElementById('tmplBody').value };
+    showLoading(true);
+    try {
+      if (isEdit) await api('/admin/campaigns/templates/' + id, { method: 'PUT', body: JSON.stringify(data) });
+      else await api('/admin/campaigns/templates', { method: 'POST', body: JSON.stringify(data) });
+      closeModal();
+      loadCampaigns();
+    } catch(err) { alert(err.message); }
+    showLoading(false);
+  };
+}
+
+function openCampaignModal(id) {
+  var isEdit = !!id;
+  var html = '<h2>' + (isEdit ? 'Edit' : 'New') + ' Campaign</h2>' +
+    '<form id="campForm">' +
+      '<div class="form-group"><label>Campaign Name *</label><input id="campName" required></div>' +
+      '<div class="form-group"><label>Template</label><select id="campTemplate"><option value="">None</option></select></div>' +
+      '<div class="form-group"><label>Target Filter</label>' +
+        '<input id="campFirm" placeholder="Firm (partial match)" style="margin-bottom:4px">' +
+        '<input id="campTag" placeholder="Tag (exact)" style="margin-bottom:4px">' +
+        '<select id="campTier"><option value="">Any tier</option><option value="A">A - Core</option><option value="B">B - Regular</option><option value="C">C - Occasional</option></select>' +
+      '</div>' +
+      '<div class="modal-actions">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update' : 'Create') + '</button>' +
+      '</div>' +
+    '</form>';
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('open');
+
+  // Populate template dropdown
+  api('/admin/campaigns/templates').then(function(tmpls) {
+    var sel = document.getElementById('campTemplate');
+    sel.innerHTML = '<option value="">None</option>' + tmpls.map(function(t) { return '<option value="' + t.id + '">' + esc(t.name) + '</option>'; }).join('');
+    if (isEdit) loadCampaignData(id);
+  });
+
+  document.getElementById('campForm').onsubmit = async function(e) {
+    e.preventDefault();
+    var filters = {};
+    var firm = document.getElementById('campFirm').value.trim();
+    var tag = document.getElementById('campTag').value.trim();
+    var tier = document.getElementById('campTier').value;
+    if (firm) filters.firm = firm;
+    if (tag) filters.tag = tag;
+    if (tier) filters.tier = tier;
+    var data = { name: document.getElementById('campName').value, template_id: parseInt(document.getElementById('campTemplate').value) || null, target_filters: filters };
+    showLoading(true);
+    try {
+      if (isEdit) alert('Edit not supported yet. Delete and recreate.');
+      else { await api('/admin/campaigns', { method: 'POST', body: JSON.stringify(data) }); closeModal(); loadCampaigns(); }
+    } catch(err) { alert(err.message); }
+    showLoading(false);
+  };
+}
+
+async function loadCampaignData(id) {
+  var campaigns = await api('/admin/campaigns');
+  var c = campaigns.find(function(x) { return x.id === id; });
+  if (!c) return;
+  document.getElementById('campName').value = c.name;
+  if (c.template_id) document.getElementById('campTemplate').value = c.template_id;
+  var f = c.target_filters || {};
+  document.getElementById('campFirm').value = f.firm || '';
+  document.getElementById('campTag').value = f.tag || '';
+  document.getElementById('campTier').value = f.tier || '';
+}
+
+async function generateCampaign(id) {
+  showLoading(true);
+  try {
+    var resp = await api('/admin/campaigns/' + id + '/generate', { method: 'POST' });
+    alert('Generated ' + resp.generated + ' emails for ' + resp.target_count + ' contacts' + (resp.use_ai ? ' (AI personalized)' : ''));
+    loadCampaigns();
+  } catch(err) { alert(err.message); }
+  showLoading(false);
+}
+
+async function sendCampaign(id) {
+  if (!confirm('Send all pending emails? This will actually send them.')) return;
+  showLoading(true);
+  try {
+    var resp = await api('/admin/campaigns/' + id + '/send', { method: 'POST' });
+    alert('Sent: ' + resp.sent + ', Failed: ' + resp.failed);
+    loadCampaigns();
+  } catch(err) { alert(err.message); }
+  showLoading(false);
+}
+
+async function viewSendLog(id) {
+  showLoading(true);
+  try {
+    var logs = await api('/admin/campaigns/' + id + '/log');
+    var html = '<h2>Send Log</h2><div style="max-height:400px;overflow-y:auto">';
+    logs.forEach(function(l) {
+      html += '<div style="padding:4px 0;font-size:0.78rem;border-bottom:1px solid var(--border)">' +
+        '<span style="color:' + (l.status === 'sent' ? 'var(--green)' : 'var(--red)') + '">' + l.status + '</span> ' +
+        '<strong>' + esc(l.contact_name) + '</strong> <' + esc(l.recipient_email) + '> ' +
+        l.sent_at + (l.error_msg ? ' <span style="color:var(--red)">' + esc(l.error_msg.substring(0,100)) + '</span>' : '') +
+      '</div>';
+    });
+    html += '</div><button class="btn" onclick="closeModal()">Close</button>';
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('open');
+  } catch(err) { alert(err.message); }
+  showLoading(false);
+}
+
+function deleteCampaign_(id) {
+  if (!confirm('Delete this campaign and all send logs?')) return;
+  api('/admin/campaigns/' + id, { method: 'DELETE' }).then(function() { loadCampaigns(); });
+}
+
+// ─── Outreach ───
+async function loadOutreach() {
+  var region = document.getElementById('outreachRegion').value;
+  var status = document.getElementById('outreachStatus').value;
+  var search = document.getElementById('outreachSearch').value;
+  var params = new URLSearchParams();
+  if (region) params.set('region', region);
+  if (status) params.set('status', status);
+  if (search) params.set('search', search);
+  var qs = params.toString();
+
+  try {
+    var targets = await api('/outreach/targets' + (qs ? '?' + qs : ''));
+    // Stats
+    var total = targets.length;
+    var notContacted = targets.filter(function(t) { return t.status === 'not_contacted'; }).length;
+    var emailed = targets.filter(function(t) { return t.status === 'emailed'; }).length;
+    var replied = targets.filter(function(t) { return t.status === 'replied'; }).length;
+    document.getElementById('outreachStats').innerHTML =
+      '<span>Total: <strong>' + total + '</strong></span>' +
+      '<span style="color:var(--text3)">Not contacted: <strong>' + notContacted + '</strong></span>' +
+      '<span style="color:var(--green)">Emailed: <strong>' + emailed + '</strong></span>' +
+      '<span style="color:var(--accent)">Replied: <strong>' + replied + '</strong></span>';
+
+    // Table
+    document.getElementById('outreachTable').innerHTML = targets.length ?
+      targets.map(function(t) {
+        var statusLabel = {not_contacted:'⏳', emailed:'📨', replied:'✅', failed:'❌'}[t.status] || t.status;
+        var statusColor = {not_contacted:'var(--text3)', emailed:'var(--green)', replied:'var(--accent)', failed:'var(--red)'}[t.status] || 'var(--text3)';
+        return '<tr>' +
+          '<td><strong>' + esc(t.name) + '</strong></td>' +
+          '<td>' + esc(t.firm) + '</td>' +
+          '<td style="font-size:0.75rem;color:var(--text3)">' + esc(t.title || '') + '</td>' +
+          '<td>' + esc(t.region || '') + '</td>' +
+          '<td><span style="color:' + statusColor + '">' + statusLabel + '</span></td>' +
+          '<td>' +
+            (t.status === 'not_contacted' || t.status === 'failed' ?
+              '<button class="btn btn-primary btn-sm" style="font-size:0.7rem;padding:3px 8px" onclick="sendOutreachOne(' + t.id + ',this)">Send</button>' :
+              '<button class="btn btn-sm" style="font-size:0.7rem;padding:3px 8px" onclick="markOutreach(' + t.id + ',\'replied\')">✓ Replied</button>') +
+          '</td>' +
+        '</tr>';
+      }).join('') :
+      '<tr><td colspan="6" class="empty" style="padding:20px"><p>No targets yet — import the Excel file first.</p></td></tr>';
+
+    // Populate region dropdown
+    var regions = await api('/outreach/regions');
+    var sel = document.getElementById('outreachRegion');
+    var currentRegion = sel.value;
+    sel.innerHTML = '<option value="">All Regions</option>' + regions.map(function(r) { return '<option value="' + r + '"' + (r===currentRegion?' selected':'') + '>' + r + '</option>'; }).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function sendOutreachOne(id, btn) {
+  if (!confirm('Send cold email to this contact?')) return;
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    var resp = await api('/outreach/send-one', { method: 'POST', body: JSON.stringify({contact_id: id}) });
+    if (resp.ok) { btn.textContent = '📨 Sent'; loadOutreach(); }
+    else { btn.textContent = '❌ Failed'; alert('Error: ' + (resp.error || 'unknown')); }
+  } catch(e) { btn.textContent = '❌ Error'; alert(e.message); }
+  btn.disabled = false;
+}
+
+async function sendOutreachBatch() {
+  var region = document.getElementById('outreachRegion').value;
+  var status = document.getElementById('outreachStatus').value || 'not_contacted';
+  if (!confirm('Send cold email to ALL ' + status + ' contacts' + (region ? ' in ' + region : '') + '? This is a batch send.')) return;
+  var btn = document.getElementById('outreachSendBatch');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    var params = new URLSearchParams();
+    if (region) params.set('region', region);
+    params.set('status', status);
+    var resp = await api('/outreach/send-batch?' + params.toString(), { method: 'POST' });
+    alert('Sent: ' + resp.sent + ', Failed: ' + resp.failed);
+  } catch(e) { alert(e.message); }
+  btn.disabled = false;
+  btn.textContent = '📨 Send All (this filter)';
+  loadOutreach();
+}
+
+async function markOutreach(id, status) {
+  await api('/outreach/mark/' + id + '?status=' + status, { method: 'POST' });
+  loadOutreach();
+}
+
+async function importOutreachExcel(file) {
+  if (!file) return;
+  var el = document.getElementById('outreachImportStatus');
+  el.innerHTML = '<span class="spinner"></span> Importing Excel...';
+  var formData = new FormData();
+  formData.append('file', file);
+  try {
+    var resp = await fetch('/outreach/import-excel', { method: 'POST', body: formData });
+    if (!resp.ok) throw new Error('Import failed');
+    var result = await resp.json();
+    el.innerHTML = '✅ Imported ' + result.created + ' contacts' + (result.skipped ? ' (' + result.skipped + ' skipped, already imported)' : '');
+    loadOutreach();
+  } catch(e) { el.innerHTML = '❌ Error: ' + e.message; }
+}
+
 function openDealModal(id) {
   var isEdit = !!id;
   var modal = document.getElementById('modalContent');
+  // Build user options for assignee
+  var userOptions = '';
+  if (currentUser) {
+    userOptions = '<option value="">Unassigned</option>';
+    // We'll load users dynamically below
+  }
   modal.innerHTML =
     '<h2>' + (isEdit ? 'Edit' : 'New') + ' Deal</h2>' +
     '<form id="dealForm">' +
@@ -1015,6 +1698,15 @@ function openDealModal(id) {
         DEAL_STAGES.map(function(s) { return '<option value="' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>'; }).join('') +
       '</select></div>' +
       '<div class="form-group"><label>Size ($M)</label><input type="number" step="0.1" id="dSize"></div>' +
+      '<div class="form-group"><label>Expected Fee ($K)</label><input type="number" step="1" id="dExpectedFee"></div>' +
+      '<div class="form-group"><label>Fee Type</label><select id="dFeeType">' +
+        '<option value="">None</option>' +
+        '<option value="retainer">Retainer</option>' +
+        '<option value="success-fee">Success Fee</option>' +
+        '<option value="hybrid">Hybrid</option>' +
+      '</select></div>' +
+      '<div class="form-group"><label>Assignee</label><select id="dAssignee"><option value="0">Unassigned</option></select></div>' +
+      renderMilestoneEditor(id) +
       '<div class="form-group"><label>Tags</label><input id="dTags" placeholder="Comma-separated"></div>' +
       '<div class="form-group"><label>Notes</label><textarea id="dNotesText"></textarea></div>' +
       '<div class="modal-actions">' +
@@ -1024,14 +1716,26 @@ function openDealModal(id) {
     '</form>';
   document.getElementById('modalOverlay').classList.add('open');
 
+  // Load user list for assignee dropdown
+  loadDealAssigneeList();
+
   if (isEdit) {
     api('/deals/' + id).then(function(d) {
       document.getElementById('dName').value = d.name || '';
       document.getElementById('dType').value = d.type || 'independent-sponsor';
       document.getElementById('dStage').value = d.stage || 'prospect';
       document.getElementById('dSize').value = d.size_mm || '';
+      document.getElementById('dExpectedFee').value = d.expected_fee || '';
+      document.getElementById('dFeeType').value = d.fee_type || '';
+      setTimeout(function() { document.getElementById('dAssignee').value = d.assignee_user_id || '0'; }, 200);
       document.getElementById('dTags').value = (d.tags || []).join(', ');
       document.getElementById('dNotesText').value = d.notes_text || '';
+      // Check existing milestones
+      var existingMilestones = d.milestones || [];
+      document.querySelectorAll('.mstone-check').forEach(function(cb) {
+        var match = existingMilestones.find(function(m) { return m.name === cb.dataset.name; });
+        if (match && (match.done || match.status === 'completed')) cb.checked = true;
+      });
     });
   }
 
@@ -1042,6 +1746,10 @@ function openDealModal(id) {
       type: document.getElementById('dType').value,
       stage: document.getElementById('dStage').value,
       size_mm: parseFloat(document.getElementById('dSize').value) || null,
+      expected_fee: parseFloat(document.getElementById('dExpectedFee').value) || null,
+      fee_type: document.getElementById('dFeeType').value || '',
+      assignee_user_id: parseInt(document.getElementById('dAssignee').value) || null,
+      milestones: collectMilestonesFromForm(),
       tags: document.getElementById('dTags').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean),
       notes_text: document.getElementById('dNotesText').value,
     };
@@ -1054,6 +1762,17 @@ function openDealModal(id) {
     } catch (err) { alert(err.message); }
     showLoading(false);
   });
+}
+
+async function loadDealAssigneeList() {
+  if (!currentUser || !currentUser.is_admin) return;
+  try {
+    var users = await api('/users');
+    var sel = document.getElementById('dAssignee');
+    if (!sel) return;
+    sel.innerHTML = '<option value="0">Unassigned</option>' +
+      users.map(function(u) { return '<option value="' + u.id + '">' + esc(u.username) + '</option>'; }).join('');
+  } catch(e) {}
 }
 
 // ─── Notes ───
@@ -1273,6 +1992,27 @@ async function parsePaste() {
   btn.disabled = false;
 }
 
+async function parseWhatsApp() {
+  var body = document.getElementById('waBody').value;
+  var groupName = document.getElementById('waGroupName').value;
+  if (!body.trim()) { alert('Paste the WhatsApp chat first'); return; }
+  var statusEl = document.getElementById('waParseStatus');
+  var btn = document.getElementById('waParseBtn');
+  btn.disabled = true;
+  statusEl.innerHTML = '<span class="spinner"></span> Parsing WhatsApp chat...';
+  try {
+    await api('/inbound/whatsapp', { method: 'POST', body: JSON.stringify({ text: body, group_name: groupName }) });
+    document.getElementById('waBody').value = '';
+    document.getElementById('waGroupName').value = '';
+    statusEl.innerHTML = '<span class="spinner"></span> AI extracting from WhatsApp…';
+    await loadInbox();
+    pollInboxUntilIdle(statusEl);
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+  }
+  btn.disabled = false;
+}
+
 async function uploadPdf(file) {
   if (!file) return;
   var statusEl = document.getElementById('parseStatus');
@@ -1352,7 +2092,7 @@ async function loadInbox() {
       return '<div class="ing-card">' +
         '<div class="ing-head">' +
           '<div><div class="ing-subject">' + esc(title) + '</div>' +
-          '<div class="ing-meta">' + (r.source === 'email' ? '✉ ' + esc(r.sender || 'email') : (r.source === 'pdf' ? '📄 PDF' : 'pasted')) + ' · ' + fmtDate(r.created_at) + '</div></div>' +
+          '<div class="ing-meta">' + (r.source === 'email' ? '✉ ' + esc(r.sender || 'email') : (r.source === 'pdf' ? '📄 PDF' : r.source === 'whatsapp' ? '💬 WhatsApp' : 'pasted')) + ' · ' + fmtDate(r.created_at) + '</div></div>' +
           '<span class="ing-status ' + r.status + '">' + r.status + '</span>' +
         '</div>' +
         (r.ai_summary ? '<div class="ing-summary">' + esc(r.ai_summary) + '</div>' : '') +
@@ -1555,7 +2295,9 @@ async function loadMe() {
   if (!el) return;
   if (!currentUser) { el.innerHTML = ''; return; }
   el.innerHTML = '<span class="hu-name">' + esc(currentUser.username) + '</span>' +
-    (currentUser.is_admin ? '<button onclick="openUsersModal()">⚙ Users</button>' : '');
+    (currentUser.is_admin ? '<button onclick="openUsersModal()">\u2699\uFE0F Users</button>' : '');
+  // Refresh admin controls in case we're on the deals tab
+  renderAdminCSV();
 }
 
 async function openUsersModal() {
