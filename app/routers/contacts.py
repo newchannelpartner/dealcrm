@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Contact
-from app.auth import get_current_owner
+from app.models import Contact, User
+from app.auth import get_current_owner, get_current_user
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
@@ -133,6 +133,40 @@ def delete_contact(
     db.delete(contact)
     db.commit()
     return {"ok": True}
+
+
+@router.post("/{contact_id}/enrich")
+async def enrich_contact(
+    contact_id: int,
+    user: User = Depends(get_current_user),
+    owner_id: int = Depends(get_current_owner),
+    db: Session = Depends(get_db),
+):
+    """AI-enrich a contact with firm background, industry, and suggested tags."""
+    contact = _get_contact_or_404(contact_id, owner_id, db)
+    from app.ai import enrich_contact as ai_enrich
+
+    result = await ai_enrich(contact.name, contact.firm or "", contact.email or "")
+    if not result.get("firm_description") and not result.get("industry"):
+        raise HTTPException(503, "AI enrichment unavailable — check LLM config")
+
+    # Build summary from enrichment
+    parts = []
+    if result["firm_description"]:
+        parts.append(result["firm_description"])
+    if result["relevance"]:
+        parts.append(result["relevance"])
+    contact.summary_text = " ".join(parts) if parts else contact.summary_text
+
+    # Merge suggested tags
+    existing = set(contact.tags or [])
+    for tag in result.get("suggested_tags", []):
+        existing.add(tag)
+    contact.tags = list(existing)[:20]
+
+    db.commit()
+    db.refresh(contact)
+    return {"ok": True, "contact": contact.to_dict(), "enrichment": result}
 
 
 def _get_contact_or_404(contact_id: int, owner_id: int, db: Session) -> Contact:

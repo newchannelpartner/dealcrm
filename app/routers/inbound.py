@@ -97,6 +97,24 @@ def create_from_whatsapp(
     return ing.to_dict()
 
 
+@router.post("/whatsapp-file")
+async def create_from_whatsapp_file(
+    file: UploadFile = File(...),
+    group_name: str = "WhatsApp Chat",
+    owner_id: int = Depends(get_current_owner),
+    db: Session = Depends(get_db),
+):
+    """Upload WhatsApp .txt export — AI parses business-relevant conversations."""
+    contents = await file.read()
+    text = contents.decode("utf-8", errors="replace")
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="File is empty")
+    ing = _create_ingestion(db, owner_id, "whatsapp",
+                            subject=group_name, sender="", raw_text=text)
+    _process_whatsapp_async(ing.id)
+    return ing.to_dict()
+
+
 @router.post("/pdf")
 async def create_from_pdf(
     file: UploadFile = File(...),

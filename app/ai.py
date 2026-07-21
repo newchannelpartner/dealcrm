@@ -189,6 +189,47 @@ async def analyze_whatsapp_chat(text: str) -> dict:
     }
 
 
+CONTACT_ENRICH_PROMPT = (
+    "You are an M&A and private equity research analyst. "
+    "Given a contact's name, firm, and email domain, generate a professional enrichment profile. "
+    "Use your knowledge of the firm's industry, recent deals, and market position. "
+    "Be factual — if unsure, leave the field blank. "
+    "Return ONLY valid JSON, no markdown:\n{\n"
+    '  "firm_description": "1-2 sentence description of what the firm does",\n'
+    '  "industry": "primary industry sector (e.g. Personal Injury Law, Commercial Litigation)",\n'
+    '  "firm_size": "approximate attorney count or revenue range if known, or empty",\n'
+    '  "recent_news": "any notable recent M&A, expansion, or leadership news about this firm",\n'
+    '  "relevance": "why this contact/firm is relevant for M&A in the PI law space",\n'
+    '  "suggested_tags": ["tag1", "tag2"]\n}'
+)
+
+
+async def enrich_contact(name: str, firm: str, email: str = "") -> dict:
+    """Enrich a contact with AI-generated firm and industry intelligence."""
+    empty = {"firm_description": "", "industry": "", "firm_size": "",
+             "recent_news": "", "relevance": "", "suggested_tags": []}
+    if not _is_configured() or not name.strip():
+        return empty
+
+    context = f"Contact: {name}\nFirm: {firm or 'unknown'}\nEmail domain: {email.split('@')[-1] if '@' in email else 'unknown'}"
+    response_text = await _call_llm(CONTACT_ENRICH_PROMPT, context)
+    if not response_text:
+        return empty
+
+    parsed = _parse_json_defensively(response_text)
+    if not parsed:
+        return empty
+
+    return {
+        "firm_description": str(parsed.get("firm_description", "")),
+        "industry": str(parsed.get("industry", "")),
+        "firm_size": str(parsed.get("firm_size", "")),
+        "recent_news": str(parsed.get("recent_news", "")),
+        "relevance": str(parsed.get("relevance", "")),
+        "suggested_tags": _ensure_list(parsed.get("suggested_tags")),
+    }
+
+
 async def _call_llm(system_prompt: str, user_content: str) -> str | None:
     """Make a single call to the configured OpenAI-compatible chat endpoint."""
     cfg = _llm_config()

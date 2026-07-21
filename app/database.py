@@ -92,6 +92,10 @@ def _migrate_columns():
         # ── Todos ──
         _add_column_if_missing(conn, "todos", "assigned_to_user_id", "INTEGER")
 
+        # ── Users ──
+        _add_column_if_missing(conn, "users", "display_name", "VARCHAR(255) DEFAULT ''")
+        _add_column_if_missing(conn, "users", "email", "VARCHAR(255) DEFAULT ''")
+
         # ── Notes ── (ensure older DBs have these)
         _add_column_if_missing(conn, "notes", "ai_takeaways", "JSON")
         _add_column_if_missing(conn, "notes", "body_text", "TEXT DEFAULT ''")

@@ -1,5 +1,11 @@
 """DealCRM — bespoke CRM for M&A advisory and private credit."""
 import os
+from pathlib import Path
+
+# Load .env at startup
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.database import init_db, engine, SessionLocal
-from app.routers import contacts, deals, notes, todos, dashboard, inbound, users, admin_upload, csv_io, firms, attachments, audit_log, ai_tools, campaigns, outreach
+from app.routers import contacts, deals, notes, todos, dashboard, inbound, users, admin_upload, csv_io, firms, attachments, audit_log, ai_tools, campaigns, outreach, prospect
 
 
 @asynccontextmanager
@@ -21,13 +27,32 @@ async def lifespan(app: FastAPI):
 
 
 def _seed_admin():
-    """Create the initial admin account from env vars if no users exist yet."""
-    from app.auth import seed_admin_user
+    """Create the initial admin and team accounts if no users exist yet."""
+    from app.auth import seed_admin_user, hash_password
+    from app.models import User
     db = SessionLocal()
     try:
         seed_admin_user(db)
+        _create_team_accounts(db, hash_password)
     finally:
         db.close()
+
+
+def _create_team_accounts(db, hash_fn):
+    team = [
+        ("andrew", "Andrew"), ("will", "Will"), ("matt", "Matt"),
+        ("steven", "Steven"), ("noah", "Noah"), ("gloria", "Gloria"),
+        ("chelsea", "Chelsea"),
+    ]
+    from app.models import User
+    for username, display_name in team:
+        if not db.query(User).filter(User.username == username).first():
+            db.add(User(
+                username=username, display_name=display_name,
+                password_hash=hash_fn("ncp2026"), password_salt="",
+                is_admin=False, owner_id=1,
+            ))
+    db.commit()
 
 
 def _start_scheduler():
@@ -76,6 +101,7 @@ app.include_router(audit_log.router)
 app.include_router(ai_tools.router)
 app.include_router(campaigns.router)
 app.include_router(outreach.router)
+app.include_router(prospect.router)
 
 
 # Health check (no auth)

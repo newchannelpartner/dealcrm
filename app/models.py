@@ -85,6 +85,8 @@ class User(Base):
     username = Column(String(150), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     password_salt = Column(String(64), nullable=False)
+    display_name = Column(String(255), default="")
+    email = Column(String(255), default="")
     is_admin = Column(Boolean, default=False)
     owner_id = Column(Integer, default=1)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -93,6 +95,8 @@ class User(Base):
         return {
             "id": self.id,
             "username": self.username,
+            "display_name": self.display_name or self.username,
+            "email": self.email or "",
             "is_admin": bool(self.is_admin),
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

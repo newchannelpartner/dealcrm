@@ -372,7 +372,7 @@ async def enrich_outreach_email(
         f"Firm: {contact.firm or 'Unknown'}\n"
         f"Title: {contact.title or 'Unknown'}\n"
         f"Location: {contact.outreach_region or 'Unknown'}\n"
-        f"Current draft:\n{PI_EMAIL_TEMPLATE.replace('{contact_name}', contact.name)}"
+        f"Current draft:\n{PI_EMAIL_BODY.replace('{contact_name}', contact.name)}"
     )
     result = await _call_llm(prompt, context)
     if not result:
