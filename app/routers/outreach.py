@@ -184,6 +184,7 @@ def _find_col(headers: list[str], *names: str) -> int:
 def list_targets(
     region: str = Query(default=""),
     status: str = Query(default=""),
+    sector: str = Query(default=""),
     search: str = Query(default=""),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -193,6 +194,9 @@ def list_targets(
         q = q.filter(Contact.outreach_region == region)
     if status:
         q = q.filter(Contact.outreach_status == status)
+    if sector:
+        # Filter by tags containing the sector
+        q = q.filter(Contact.tags_json.contains(sector))
     if search:
         q = q.filter(
             Contact.name.ilike(f"%{search}%") |

@@ -346,6 +346,14 @@ tr:hover td { background: var(--surface2); }
     <div class="tab-content" id="tab-outreach">
       <div class="toolbar" style="flex-wrap:wrap;gap:8px">
         <select id="outreachRegion" onchange="loadOutreach()"><option value="">All Regions</option></select>
+        <select id="outreachSector" onchange="loadOutreach()">
+          <option value="">All Practice Areas</option>
+          <option value="PI Law Firm">PI Law Firm</option>
+          <option value="Workers Comp">Workers Comp</option>
+          <option value="Medical Malpractice">Medical Malpractice</option>
+          <option value="Commercial Litigation">Commercial Litigation</option>
+          <option value="Prospected">Prospected (New)</option>
+        </select>
         <select id="outreachStatus" onchange="loadOutreach()">
           <option value="">All Status</option>
           <option value="not_contacted">Not Contacted</option>
@@ -369,10 +377,20 @@ tr:hover td { background: var(--surface2); }
 
     <!-- Prospect -->
     <div class="tab-content" id="tab-prospect">
-      <p style="font-size:0.82rem;color:var(--text2);margin-bottom:14px">AI-powered PI law firm discovery. Enter region or keywords, AI finds firms with websites, LinkedIn, emails, and phone numbers.</p>
-      <div class="toolbar" style="flex-wrap:wrap;gap:8px">
-        <input type="text" id="prospectQuery" placeholder="Keywords (e.g. Miami injury, workers comp)..." style="min-width:200px">
+      <p style="font-size:0.82rem;color:var(--text2);margin-bottom:10px">AI-powered law firm discovery. Describe what you need, filter by practice area and location.</p>
+      <div style="margin-bottom:10px">
+        <textarea id="prospectQuery" placeholder="Describe what you're looking for... e.g. 'Midsize PI firms in Southeast with 5-20 attorneys, open to selling' or 'Workers comp firms in Texas with strong referral networks'" style="width:100%;height:60px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;font-size:0.84rem;color:var(--text);resize:vertical;box-shadow:var(--shadow-sm)"></textarea>
+      </div>
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <input type="text" id="prospectSector" placeholder="Practice area (PI, workers comp, med mal...)" style="min-width:160px">
         <input type="text" id="prospectLocation" placeholder="Location (city/state)" style="min-width:140px">
+        <select id="prospectCount" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:var(--radius);font-size:0.82rem;box-shadow:var(--shadow-sm)">
+          <option value="5">5 firms</option>
+          <option value="10" selected>10 firms</option>
+          <option value="15">15 firms</option>
+          <option value="20">20 firms</option>
+          <option value="30">30 firms</option>
+        </select>
         <button class="btn btn-primary" id="prospectBtn" onclick="searchProspects()">🔍 Search</button>
         <span id="prospectStatus" style="font-size:0.78rem;color:var(--text3)"></span>
       </div>
@@ -1678,10 +1696,12 @@ function deleteCampaign_(id) {
 async function loadOutreach() {
   var region = document.getElementById('outreachRegion').value;
   var status = document.getElementById('outreachStatus').value;
+  var sector = document.getElementById('outreachSector').value;
   var search = document.getElementById('outreachSearch').value;
   var params = new URLSearchParams();
   if (region) params.set('region', region);
   if (status) params.set('status', status);
+  if (sector) params.set('sector', sector);
   if (search) params.set('search', search);
   var qs = params.toString();
 
@@ -1862,12 +1882,14 @@ async function searchProspects() {
   var statusEl = document.getElementById("prospectStatus");
   var query = document.getElementById("prospectQuery").value;
   var location = document.getElementById("prospectLocation").value;
+  var sector = document.getElementById("prospectSector").value;
+  var count = parseInt(document.getElementById("prospectCount").value) || 10;
   btn.disabled = true;
   statusEl.innerHTML = '<span class="spinner"></span> AI searching firms...';
   try {
     var resp = await api('/prospect/search', {
       method: 'POST',
-      body: JSON.stringify({ query: query, location: location, count: 10 })
+      body: JSON.stringify({ query: query, location: location, sector: sector, count: count })
     });
     renderProspectResults(resp);
     statusEl.textContent = 'Found ' + resp.length + ' firms';
