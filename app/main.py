@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.database import init_db, engine, SessionLocal
-from app.routers import contacts, deals, notes, todos, dashboard, inbound, users, admin_upload, csv_io, firms, attachments, audit_log, ai_tools, campaigns, outreach, prospect
+from app.routers import contacts, deals, notes, todos, dashboard, inbound, users, csv_io, firms, attachments, audit_log, ai_tools, campaigns, outreach, prospect
 
 
 @asynccontextmanager
@@ -93,7 +93,6 @@ app.include_router(todos.router)
 app.include_router(dashboard.router)
 app.include_router(inbound.router)
 app.include_router(users.router)
-app.include_router(admin_upload.router)
 app.include_router(csv_io.router)
 app.include_router(firms.router)
 app.include_router(attachments.router)
