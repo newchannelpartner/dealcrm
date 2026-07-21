@@ -231,12 +231,13 @@ def list_regions(
 
 class SendOneRequest(BaseModel):
     contact_id: int
+    custom_body: str = ""
 
 
 @router.post("/send-one")
 async def send_one(
     data: SendOneRequest,
-    _admin: User = Depends(require_admin),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     if not is_smtp_configured():
@@ -246,16 +247,16 @@ async def send_one(
     if not contact or not contact.email:
         raise HTTPException(404, "Contact not found or no email")
 
-    # Personalize with AI
-    body = PI_EMAIL_BODY.replace("{contact_name}", contact.name)
-    body = body.replace("{firm}", contact.firm or "your firm")
+    # Personalize with AI (skip if custom body provided)
+    body = data.custom_body or PI_EMAIL_BODY.replace("{contact_name}", contact.name).replace("{firm}", contact.firm or "your firm")
 
-    try:
-        body = await personalize_with_ai(
-            contact.name, contact.firm or "", contact.title or "", body
-        )
-    except Exception:
-        pass  # use unpersonalized version
+    if not data.custom_body:
+        try:
+            body = await personalize_with_ai(
+                contact.name, contact.firm or "", contact.title or "", body
+            )
+        except Exception:
+            pass  # use unpersonalized version
 
     subject = PI_EMAIL_SUBJECT.replace("{contact_name}", contact.name)
 
@@ -269,8 +270,9 @@ async def send_one(
     if success:
         contact.outreach_status = "emailed"
         contact.last_contacted_at = datetime.now(timezone.utc)
+        contact.outreach_notes = f"Subject: {subject}\n\n{body}"
         db.commit()
-        return {"ok": True, "contact_id": contact.id, "status": "sent"}
+        return {"ok": True, "contact_id": contact.id, "status": "sent", "body": body}
     else:
         contact.outreach_status = "failed"
         contact.outreach_notes = f"Send error: {error[:200]}"
@@ -282,7 +284,7 @@ async def send_one(
 async def send_batch(
     region: str = Query(default=""),
     status: str = Query(default="not_contacted"),
-    _admin: User = Depends(require_admin),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Send to all targets matching region + status filters."""
@@ -313,6 +315,7 @@ async def send_batch(
         if success:
             contact.outreach_status = "emailed"
             contact.last_contacted_at = datetime.now(timezone.utc)
+            contact.outreach_notes = f"Subject: {subject}\n\n{body}"
             sent += 1
         else:
             contact.outreach_status = "failed"
@@ -328,7 +331,7 @@ async def send_batch(
 def mark_status(
     contact_id: int,
     status: str = Query(...),
-    _admin: User = Depends(require_admin),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
@@ -337,3 +340,39 @@ def mark_status(
     contact.outreach_status = status
     db.commit()
     return {"ok": True, "contact_id": contact_id, "status": status}
+
+
+@router.post("/enrich-email/{contact_id}")
+async def enrich_outreach_email(
+    contact_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """AI-enrich the outreach email for a specific contact."""
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(404, "Contact not found")
+
+    from app.ai import _call_llm, _is_configured
+    if not _is_configured():
+        raise HTTPException(503, "AI not available")
+
+    prompt = (
+        "You are a professional M&A outreach writer. Improve this cold email "
+        "to a PI law firm owner. Make it more personal, compelling, and concise. "
+        "Keep the same core message but enhance the tone and add relevant specifics "
+        "based on the firm and contact name. Return ONLY the improved email body text, no subject.\n\n"
+    )
+    context = (
+        f"Contact: {contact.name}\n"
+        f"Firm: {contact.firm or 'Unknown'}\n"
+        f"Title: {contact.title or 'Unknown'}\n"
+        f"Location: {contact.outreach_region or 'Unknown'}\n"
+        f"Current draft:\n{PI_EMAIL_TEMPLATE.replace('{contact_name}', contact.name)}"
+    )
+    result = await _call_llm(prompt, context)
+    if not result:
+        raise HTTPException(503, "AI returned no response")
+
+    subject = PI_EMAIL_SUBJECT.replace("{contact_name}", contact.name)
+    return {"ok": True, "subject": subject, "body": result.strip()}

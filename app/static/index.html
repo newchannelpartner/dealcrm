@@ -242,9 +242,26 @@ tr:hover td { background: var(--surface2); }
   .stat-card { padding: 12px 14px; }
   .stat-card .stat-value { font-size: 1.3rem; }
 }
+
+.login-overlay { display: flex; position: fixed; inset: 0; background: var(--bg); z-index: 600; align-items: center; justify-content: center; }
+.login-overlay.hidden { display: none; }
+.login-card { background: var(--surface); border-radius: var(--radius-lg); padding: 32px; width: 360px; max-width: 94vw; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+.login-card h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.4px; }
 </style>
 </head>
-<body>
+<body><div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <h2>Deal<span style="color:var(--accent)">CRM</span></h2>
+    <p style="font-size:0.82rem;color:var(--text2);margin-bottom:20px">Sign in to your account</p>
+    <form id="loginForm">
+      <div class="form-group"><input id="loginUser" placeholder="Username" required></div>
+      <div class="form-group"><input type="password" id="loginPass" placeholder="Password" required onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <p id="loginError" style="color:var(--red);font-size:0.78rem;min-height:20px"></p>
+      <button type="button" class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Sign in</button>
+    </form>
+  </div>
+</div>
+
 
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
@@ -268,6 +285,7 @@ tr:hover td { background: var(--surface2); }
     <button data-tab="contacts">Contacts</button>
     <button data-tab="deals">Deals</button>
     <button data-tab="outreach" style="background:rgba(251,191,36,0.12);color:var(--orange)">📨 Outreach</button>
+    <button data-tab="prospect">🔍 Prospect</button>
     <button data-tab="firms">Firms</button>
     <button data-tab="notes">Notes</button>
     <button data-tab="inbox">Inbox <span class="tab-badge" id="inboxBadgeTop"></span></button>
@@ -347,6 +365,18 @@ tr:hover td { background: var(--surface2); }
           <th>Name</th><th>Firm</th><th>Title</th><th>Region</th><th>Status</th><th style="width:100px">Action</th>
         </tr></thead><tbody id="outreachTable"></tbody></table>
       </div>
+    </div>
+
+    <!-- Prospect -->
+    <div class="tab-content" id="tab-prospect">
+      <p style="font-size:0.82rem;color:var(--text2);margin-bottom:14px">AI-powered PI law firm discovery. Enter region or keywords, AI finds firms with websites, LinkedIn, emails, and phone numbers.</p>
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+        <input type="text" id="prospectQuery" placeholder="Keywords (e.g. Miami injury, workers comp)..." style="min-width:200px">
+        <input type="text" id="prospectLocation" placeholder="Location (city/state)" style="min-width:140px">
+        <button class="btn btn-primary" id="prospectBtn" onclick="searchProspects()">🔍 Search</button>
+        <span id="prospectStatus" style="font-size:0.78rem;color:var(--text3)"></span>
+      </div>
+      <div id="prospectResults"></div>
     </div>
 
     <!-- Firms -->
@@ -432,7 +462,9 @@ tr:hover td { background: var(--surface2); }
       <textarea id="waBody" placeholder="Paste WhatsApp chat export here..."
         style="width:100%;min-height:140px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:12px;font-size:0.85rem;font-family:inherit;resize:vertical"></textarea>
       <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
-        <button class="btn btn-primary" onclick="parseWhatsApp()" id="waParseBtn">📱 Parse WhatsApp</button>
+        <button class="btn btn-primary" onclick="parseWhatsApp()" id="waParseBtn">📱 Parse paste</button>
+        <input type="file" id="waFileInput" accept=".txt,.csv,text/plain" style="display:none" onchange="uploadWhatsAppFile(this.files[0]);this.value=''">
+        <button class="btn" id="waUploadBtn" onclick="document.getElementById('waFileInput').click()">📂 Upload .txt (one-click)</button>
         <span id="waParseStatus" style="font-size:0.8rem;color:var(--text3)"></span>
       </div>
 
@@ -486,20 +518,62 @@ let notesEditorReady = false;
 let activeTab = 'dashboard';
 let todoCache = {};
 
-// ─── API helper (HTTP Basic Auth handled by browser) ───
-async function api(path, opts = {}) {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...opts.headers },
-    ...opts,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || 'Request failed');
-  }
+// ─── API ───
+var authToken = localStorage.getItem('dealcmt_token') || null;
+async function api(path, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  opts.headers['Content-Type'] = 'application/json';
+  if (authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
+  var res = await fetch(path, opts);
+  if (res.status === 401) { authToken = null; localStorage.removeItem('dealcmt_token'); showLogin(); throw new Error('Session expired'); }
+  if (!res.ok) { var e = await res.json().catch(function(){return{};}); throw new Error(e.detail || 'Failed'); }
+  if (res.status === 204) return null;
   return res.json();
 }
 
-// ─── Loading ───
+// ─── Login ───
+function showLogin() {
+  authToken = null;
+  localStorage.removeItem('dealcmt_token');
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('loginUser').focus();
+}
+
+async function doLogin() {
+  var btn = document.querySelector('#loginOverlay button');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  document.getElementById('loginError').textContent = '';
+  try {
+    var resp = await fetch('/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        username: document.getElementById('loginUser').value,
+        password: document.getElementById('loginPass').value
+      })
+    });
+    if (!resp.ok) throw new Error('bad');
+    var data = await resp.json();
+    authToken = data.token;
+    localStorage.setItem('dealcmt_token', data.token);
+    currentUser = data.user;
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('headerUserName').textContent = data.user.display_name || data.user.username;
+    document.getElementById('btnUsers').style.display = data.user.is_admin ? '' : 'none';
+    loadMe();
+    refreshInboxBadge();
+    switchTab((window.location.hash || '').replace('#','') || 'dashboard');
+  } catch(err) {
+    document.getElementById('loginError').textContent = 'Invalid username or password';
+  }
+  btn.disabled = false; btn.textContent = 'Sign in';
+}
+
+// Startup
+showLogin();
+
+// ─── Loading ───// ─── Loading ───
 function showLoading(show) { document.getElementById('loading').classList.toggle('show', show); }
 
 // ─── Tabs ───
@@ -516,6 +590,7 @@ function switchTab(name) {
   else if (name === 'contacts') loadContacts();
   else if (name === 'deals') { loadDeals(); renderAdminCSV(); }
   else if (name === 'outreach') loadOutreach();
+  else if (name === 'prospect') loadProspect();
   else if (name === 'firms') loadFirms();
   else if (name === 'notes') initNotesTab();
   else if (name === 'inbox') initInboxTab();
@@ -768,8 +843,10 @@ async function openContactDetail(id) {
         (contact.summary_text ? '<p><span class="label">Summary:</span> ' + esc(contact.summary_text) + '</p>' : '') +
         '<div style="margin-top:8px">' +
           '<button class="btn btn-secondary btn-sm" onclick="openContactModal(' + contact.id + ')">Edit</button>' +
+          '<button class="btn btn-sm" style="margin-left:4px;color:var(--accent);border-color:var(--accent)" onclick="enrichContact(' + contact.id + ')">🔍 Enrich</button>' +
           '<button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="deleteContact(' + contact.id + ')">Delete</button>' +
         '</div>' +
+        '<div id="enrichResult' + contact.id + '" style="margin-top:8px;font-size:0.78rem"></div>' +
       '</div>' +
       '<div class="detail-section">' +
         '<h4>Linked Deals (' + linkedDeals.length + ')</h4>' +
@@ -815,6 +892,28 @@ async function deleteContact(id) {
   await api('/contacts/' + id, { method: 'DELETE' });
   closeDetail();
   loadContacts();
+}
+
+async function enrichContact(id) {
+  var el = document.getElementById('enrichResult' + id);
+  el.innerHTML = '<span class="spinner"></span> AI researching contact...';
+  try {
+    var resp = await api('/contacts/' + id + '/enrich', { method: 'POST' });
+    var e = resp.enrichment;
+    var parts = [];
+    if (e.firm_description) parts.push('<strong>Firm:</strong> ' + esc(e.firm_description));
+    if (e.industry) parts.push('<strong>Industry:</strong> ' + esc(e.industry));
+    if (e.firm_size) parts.push('<strong>Size:</strong> ' + esc(e.firm_size));
+    if (e.relevance) parts.push('<strong>Relevance:</strong> ' + esc(e.relevance));
+    if (e.recent_news) parts.push('<strong>Recent:</strong> ' + esc(e.recent_news));
+    el.innerHTML = '<div style="background:#EEF2FF;padding:10px 12px;border-radius:8px;margin-top:6px">' +
+      parts.map(function(p) { return '<p>' + p + '</p>'; }).join('') +
+      '</div>';
+    // Re-open to show updated summary + tags
+    setTimeout(function() { openContactDetail(id); }, 500);
+  } catch(err) {
+    el.innerHTML = '<span style="color:var(--red)">Enrichment failed: ' + err.message + '</span>';
+  }
 }
 
 function openContactModal(id) {
@@ -1602,18 +1701,21 @@ async function loadOutreach() {
     // Table
     document.getElementById('outreachTable').innerHTML = targets.length ?
       targets.map(function(t) {
-        var statusLabel = {not_contacted:'⏳', emailed:'📨', replied:'✅', failed:'❌'}[t.status] || t.status;
+        var statusLabel = {not_contacted:'⏳ Not contacted', emailed:'📨 Sent', replied:'✅ Replied', failed:'❌ Failed'}[t.status] || t.status;
         var statusColor = {not_contacted:'var(--text3)', emailed:'var(--green)', replied:'var(--accent)', failed:'var(--red)'}[t.status] || 'var(--text3)';
+        var statusExtra = t.last_contacted_at ? ' <span style="font-size:0.65rem;color:var(--text3)">' + fmtDate(t.last_contacted_at) + '</span>' : '';
         return '<tr>' +
           '<td><strong>' + esc(t.name) + '</strong></td>' +
           '<td>' + esc(t.firm) + '</td>' +
           '<td style="font-size:0.75rem;color:var(--text3)">' + esc(t.title || '') + '</td>' +
           '<td>' + esc(t.region || '') + '</td>' +
-          '<td><span style="color:' + statusColor + '">' + statusLabel + '</span></td>' +
+          '<td><span style="color:' + statusColor + ';font-weight:500">' + statusLabel + '</span>' + statusExtra + '</td>' +
           '<td>' +
             (t.status === 'not_contacted' || t.status === 'failed' ?
-              '<button class="btn btn-primary btn-sm" style="font-size:0.7rem;padding:3px 8px" onclick="sendOutreachOne(' + t.id + ',this)">Send</button>' :
-              '<button class="btn btn-sm" style="font-size:0.7rem;padding:3px 8px" onclick="markOutreach(' + t.id + ',\'replied\')">✓ Replied</button>') +
+              '<button class="btn btn-primary btn-sm" style="font-size:0.7rem;padding:3px 8px;margin-right:4px" onclick="sendOutreachOne(' + t.id + ',this)">Send</button>' +
+              '<button class="btn btn-sm" style="font-size:0.7rem;padding:3px 8px;color:var(--purple)" onclick="aiEnrichEmail(' + t.id + ',this)">AI Enrich</button>' :
+              '<button class="btn btn-sm" style="font-size:0.7rem;padding:3px 8px;margin-right:4px" onclick="viewSentEmail(' + t.id + ')">View Email</button>' +
+              '<button class="btn btn-sm" style="font-size:0.7rem;padding:3px 8px" onclick="markOutreach(' + t.id + ',\'replied\')">Replied</button>') +
           '</td>' +
         '</tr>';
       }).join('') :
@@ -1633,10 +1735,30 @@ async function sendOutreachOne(id, btn) {
   btn.textContent = 'Sending...';
   try {
     var resp = await api('/outreach/send-one', { method: 'POST', body: JSON.stringify({contact_id: id}) });
-    if (resp.ok) { btn.textContent = '📨 Sent'; loadOutreach(); }
-    else { btn.textContent = '❌ Failed'; alert('Error: ' + (resp.error || 'unknown')); }
-  } catch(e) { btn.textContent = '❌ Error'; alert(e.message); }
-  btn.disabled = false;
+    if (resp.ok) {
+      // Update row immediately without full reload
+      btn.textContent = '✅ Sent';
+      btn.className = 'btn btn-sm';
+      btn.onclick = function() { markOutreach(id, 'replied'); };
+      // Update status cell in same row
+      var row = btn.closest('tr');
+      if (row) {
+        row.style.background = '#F0FDF4';
+        var statusCell = row.cells[4];
+        if (statusCell) statusCell.innerHTML = '<span style="color:var(--green);font-weight:600">📨 Sent</span>';
+      }
+      // Refresh stats
+      setTimeout(function() { loadOutreach(); }, 800);
+    } else {
+      btn.textContent = '❌ Failed';
+      alert('Send error: ' + (resp.error || 'unknown'));
+      btn.disabled = false;
+    }
+  } catch(e) {
+    btn.textContent = '❌ Error';
+    alert(e.message);
+    btn.disabled = false;
+  }
 }
 
 async function sendOutreachBatch() {
@@ -1663,6 +1785,61 @@ async function markOutreach(id, status) {
   loadOutreach();
 }
 
+
+
+async function viewSentEmail(id) {
+  showLoading(true);
+  try {
+    var contact = await api('/contacts/' + id);
+    showLoading(false);
+    var notes = contact.outreach_notes || 'No email content stored';
+    var html = '<h2>Sent Email</h2>' +
+      '<p style="font-size:0.78rem;color:var(--text2);margin-bottom:12px">To: ' + esc(contact.name) + '</p>' +
+      '<pre style="background:var(--surface2);padding:14px;border-radius:var(--radius);font-size:0.8rem;white-space:pre-wrap;max-height:400px;overflow-y:auto;font-family:inherit">' + esc(notes) + '</pre>' +
+      '<div style="margin-top:12px"><button class="btn btn-primary" onclick="closeModal()">Close</button></div>';
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('open');
+  } catch(e) { showLoading(false); alert(e.message); }
+}
+
+async function aiEnrichEmail(id, btn) {
+  btn.disabled = true; btn.textContent = 'AI thinking...';
+  try {
+    var resp = await api('/outreach/enrich-email/' + id, { method: 'POST' });
+    btn.textContent = '🤖 AI Enrich';
+    btn.disabled = false;
+    var html = '<h2>AI-Enriched Email</h2>' +
+      '<p style="font-size:0.78rem;color:var(--text2);margin-bottom:8px">Subject: ' + esc(resp.subject) + '</p>' +
+      '<textarea id="aiEnrichBody" style="width:100%;height:300px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:0.82rem;font-family:inherit;color:var(--text)">' + esc(resp.body) + '</textarea>' +
+      '<div style="margin-top:12px;display:flex;gap:8px">' +
+        '<button class="btn btn-primary" onclick="sendAiEnriched(' + id + ')">Send This Version</button>' +
+        '<button class="btn" onclick="closeModal()">Cancel</button>' +
+      '</div>';
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('open');
+  } catch(e) { btn.textContent = '🤖 AI Enrich'; btn.disabled = false; alert(e.message); }
+}
+
+async function sendAiEnriched(id) {
+  var body = document.getElementById('aiEnrichBody').value;
+  closeModal();
+  showLoading(true);
+  try {
+    // Send to a custom endpoint or reuse send mechanism
+    var resp = await api('/outreach/send-one', {
+      method: 'POST',
+      body: JSON.stringify({ contact_id: id, custom_body: body })
+    });
+    showLoading(false);
+    if (resp.ok) {
+      alert('Sent!');
+      loadOutreach();
+    } else {
+      alert('Error: ' + (resp.error || 'unknown'));
+    }
+  } catch(e) { showLoading(false); alert(e.message); }
+}
+
 async function importOutreachExcel(file) {
   if (!file) return;
   var el = document.getElementById('outreachImportStatus');
@@ -1677,6 +1854,86 @@ async function importOutreachExcel(file) {
     loadOutreach();
   } catch(e) { el.innerHTML = '❌ Error: ' + e.message; }
 }
+
+
+// ─── Prospecting ───
+async function searchProspects() {
+  var btn = document.getElementById("prospectBtn");
+  var statusEl = document.getElementById("prospectStatus");
+  var query = document.getElementById("prospectQuery").value;
+  var location = document.getElementById("prospectLocation").value;
+  btn.disabled = true;
+  statusEl.innerHTML = '<span class="spinner"></span> AI searching firms...';
+  try {
+    var resp = await api('/prospect/search', {
+      method: 'POST',
+      body: JSON.stringify({ query: query, location: location, count: 10 })
+    });
+    renderProspectResults(resp);
+    statusEl.textContent = 'Found ' + resp.length + ' firms';
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    document.getElementById('prospectResults').innerHTML = '';
+  }
+  btn.disabled = false;
+}
+
+function renderProspectResults(firms) {
+  var html = '';
+  firms.forEach(function(f) {
+    var contactsHtml = '';
+    if (f.key_contacts && f.key_contacts.length) {
+      contactsHtml = '<div style="font-size:0.78rem;background:var(--surface2);padding:8px 12px;border-radius:var(--radius);margin-bottom:8px"><strong>Contacts:</strong><br>' +
+        f.key_contacts.map(function(c) { return esc(c.name || '') + (c.title ? ' - ' + esc(c.title) : '') + (c.email_hint ? ' <code style="font-size:0.7rem">' + esc(c.email_hint) + '</code>' : ''); }).join('<br>') +
+      '</div>';
+    }
+    var safeData = encodeURIComponent(JSON.stringify(f));
+    html += '<div class="prospect-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-sm)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">' +
+        '<div><strong style="font-size:0.92rem">' + esc(f.firm_name) + '</strong>' +
+        '<span style="font-size:0.75rem;color:var(--text3);margin-left:8px">' + esc(f.location || '') + '</span></div>' +
+        '<span style="font-size:0.7rem;color:var(--text2)">' + esc(f.size_hint || '') + '</span>' +
+      '</div>' +
+      (f.description ? '<p style="font-size:0.8rem;color:var(--text2);margin-bottom:8px">' + esc(f.description) + '</p>' : '') +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:0.75rem">' +
+        (f.website ? '<a href="' + esc(f.website) + '" target="_blank" style="color:var(--accent)">🌐 Website</a>' : '') +
+        (f.linkedin ? '<a href="' + esc(f.linkedin) + '" target="_blank" style="color:var(--accent)">💼 LinkedIn</a>' : '') +
+      '</div>' +
+      contactsHtml +
+      '<button class=\"btn btn-primary btn-sm\" onclick=\"addProspectToOutreach(\x27' + safeData + '\x27)\">+ Add to Outreach</button>' +
+    '</div>';
+  });
+  document.getElementById('prospectResults').innerHTML = html || '<p style="color:var(--text2);text-align:center;padding:40px">No firms found. Try a different search.</p>';
+}
+
+async function addProspectToOutreach(jsonStr, btn) {
+  var firm = JSON.parse(decodeURIComponent(jsonStr));
+  if (!confirm('Add ' + firm.firm_name + ' and contacts to Outreach pipeline?')) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
+  showLoading(true);
+  try {
+    var resp = await api('/prospect/add-to-outreach', {
+      method: 'POST',
+      body: JSON.stringify({
+        firm_name: firm.firm_name,
+        website: firm.website || '',
+        linkedin: firm.linkedin || '',
+        location: firm.location || '',
+        contacts: firm.key_contacts || []
+      })
+    });
+    showLoading(false);
+    alert('✅ Added ' + resp.created + ' contacts to Outreach!');
+    if (btn) { btn.textContent = '✅ Added'; btn.className = 'btn btn-sm'; btn.onclick = null; }
+  } catch(e) {
+    showLoading(false);
+    alert('❌ ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '+ Add to Outreach'; }
+  }
+}
+
+function loadProspect() {}
+
 
 function openDealModal(id) {
   var isEdit = !!id;
@@ -2013,6 +2270,32 @@ async function parseWhatsApp() {
   btn.disabled = false;
 }
 
+async function uploadWhatsAppFile(file) {
+  if (!file) return;
+  var statusEl = document.getElementById('waParseStatus');
+  var btn = document.getElementById('waUploadBtn');
+  btn.disabled = true;
+  statusEl.innerHTML = '<span class="spinner"></span> Uploading + AI parsing WhatsApp…';
+  try {
+    var fd = new FormData();
+    fd.append('file', file);
+    var resp = await fetch('/inbound/whatsapp-file?group_name=' + encodeURIComponent(file.name.replace('.txt','')), {
+      method: 'POST',
+      body: fd,
+      headers: { 'Authorization': 'Basic ' + btoa('admin:ncp2026') }
+    });
+    if (!resp.ok) throw new Error('Upload failed');
+    document.getElementById('waBody').value = '';
+    document.getElementById('waGroupName').value = '';
+    statusEl.innerHTML = '<span class="spinner"></span> AI extracting…';
+    await loadInbox();
+    pollInboxUntilIdle(statusEl);
+  } catch(err) {
+    statusEl.textContent = 'Error: ' + err.message;
+  }
+  btn.disabled = false;
+}
+
 async function uploadPdf(file) {
   if (!file) return;
   var statusEl = document.getElementById('parseStatus');
@@ -2291,12 +2574,12 @@ async function loadMe() {
   try {
     currentUser = await api('/me');
   } catch (e) { currentUser = null; }
-  var el = document.getElementById('headerUser');
+  var el = document.getElementById('headerUserName');
   if (!el) return;
-  if (!currentUser) { el.innerHTML = ''; return; }
-  el.innerHTML = '<span class="hu-name">' + esc(currentUser.username) + '</span>' +
-    (currentUser.is_admin ? '<button onclick="openUsersModal()">\u2699\uFE0F Users</button>' : '');
-  // Refresh admin controls in case we're on the deals tab
+  if (!currentUser) { el.textContent = ''; return; }
+  el.textContent = currentUser.display_name || currentUser.username;
+  var btn = document.getElementById('btnUsers');
+  if (btn) btn.style.display = currentUser.is_admin ? '' : 'none';
   renderAdminCSV();
 }
 
@@ -2417,22 +2700,6 @@ function fmtDate(iso) {
   return d.toLocaleString();
 }
 
-// ─── Startup ───
-(function init() {
-  var hash = window.location.hash.replace('#', '');
-  switchTab(hash || 'dashboard');
-
-  // Show current user in the header (and the Users button for admins)
-  loadMe();
-
-  // Show pending-review count on the Inbox tab regardless of current tab
-  refreshInboxBadge();
-
-  // Register service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(function() {});
-  }
-})();
 </script>
 </body>
 </html>

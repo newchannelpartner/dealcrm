@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)
 # Use onboarding@resend.dev for testing; swap to verified domain email in production.
 DEFAULT_FROM = os.environ.get("RESEND_FROM", "onboarding@resend.dev")
 REPLY_TO = os.environ.get("RESEND_REPLY_TO", "ncpdealcrm@outlook.com")
+CC_ALWAYS = os.environ.get("RESEND_CC", "ncpdealcrm@outlook.com")
+FROM_NAME = os.environ.get("SENDER_NAME", "New Channel Partner Outreach Team")
+
+FULL_FROM = f"{FROM_NAME} <{DEFAULT_FROM}>"
 
 
 def is_smtp_configured() -> bool:
@@ -35,8 +39,9 @@ async def send_email(to_email: str, to_name: str, subject: str, body: str) -> tu
         resend.api_key = api_key
 
         response = resend.Emails.send({
-            "from": DEFAULT_FROM,
+            "from": FULL_FROM,
             "to": [to_email],
+            "bcc": [CC_ALWAYS],
             "reply_to": REPLY_TO,
             "subject": subject,
             "text": body,
