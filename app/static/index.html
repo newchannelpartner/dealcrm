@@ -286,6 +286,7 @@ tr:hover td { background: var(--surface2); }
     <button data-tab="deals">Deals</button>
     <button data-tab="outreach" style="background:rgba(251,191,36,0.12);color:var(--orange)">📨 Outreach</button>
     <button data-tab="prospect">🔍 Prospect</button>
+    <button data-tab="clients">Clients</button>
     <button data-tab="firms">Firms</button>
     <button data-tab="notes">Notes</button>
     <button data-tab="inbox">Inbox <span class="tab-badge" id="inboxBadgeTop"></span></button>
@@ -395,6 +396,31 @@ tr:hover td { background: var(--surface2); }
         <span id="prospectStatus" style="font-size:0.78rem;color:var(--text3)"></span>
       </div>
       <div id="prospectResults"></div>
+    </div>
+
+
+    <!-- Clients -->
+    <div class="tab-content" id="tab-clients">
+      <p style="font-size:0.82rem;color:var(--text2);margin-bottom:10px">Track existing client relationships. Syncs CCed emails from ncpdealcrm and sends reminders when contacts go stale.</p>
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <button class="btn btn-primary btn-sm" onclick="syncClients()" id="syncClientsBtn">Sync Inbox</button>
+        <button class="btn btn-sm" style="color:var(--orange)" onclick="sendClientReminders()" id="remindBtn">Send Reminders</button>
+        <select id="clientOwnerFilter" onchange="loadClients()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:var(--radius);font-size:0.78rem">
+          <option value="">All Owners</option>
+        </select>
+        <select id="clientStaleFilter" onchange="loadClients()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:var(--radius);font-size:0.78rem">
+          <option value="">All</option>
+          <option value="1">Stale Only</option>
+        </select>
+        <button class="btn btn-sm" onclick="openClientModal()">+ Add Client</button>
+        <span id="clientsStatus" style="font-size:0.78rem;color:var(--text3)"></span>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table" id="clientsTable">
+          <thead><tr><th>Client</th><th>Owner</th><th>Last Contact</th><th>Threshold</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Firms -->
@@ -609,6 +635,7 @@ function switchTab(name) {
   else if (name === 'deals') { loadDeals(); renderAdminCSV(); }
   else if (name === 'outreach') loadOutreach();
   else if (name === 'prospect') loadProspect();
+  else if (name === 'clients') loadClients();
   else if (name === 'firms') loadFirms();
   else if (name === 'notes') initNotesTab();
   else if (name === 'inbox') initInboxTab();
@@ -1326,7 +1353,137 @@ async function loadColdFollowups() {
 }
 
 // ─── Firms ───
-async function loadFirms() {
+async 
+// ─── Clients ───
+var clientData = [];
+
+function loadClients() {
+  var owner = document.getElementById('clientOwnerFilter').value;
+  var stale = document.getElementById('clientStaleFilter').value;
+  var params = [];
+  if (owner) params.push('owner_id=' + owner);
+  if (stale) params.push('stale=true');
+  api('/clients' + (params.length ? '?' + params.join('&') : '')).then(function(data) {
+    clientData = data;
+    renderClientsTable();
+    document.getElementById('clientsStatus').textContent = data.length + ' clients';
+  }).catch(function(e) {
+    document.getElementById('clientsStatus').textContent = 'Error: ' + e.message;
+  });
+}
+
+function renderClientsTable() {
+  var rows = clientData.map(function(c) {
+    var days = c.days_since_contact;
+    var s = '';
+    if (days === null) s = '<span style="color:var(--text3)">No data</span>';
+    else if (days <= c.reminder_threshold_days) s = '<span style="color:var(--green);font-weight:600">OK (' + days + 'd)</span>';
+    else if (c.reminder_sent_at) s = '<span style="color:var(--orange)">Reminded (' + days + 'd)</span>';
+    else s = '<span style="color:var(--red);font-weight:600">STALE (' + days + 'd)</span>';
+    return '<tr>' +
+      '<td><strong>' + esc(c.client_name || c.client_email) + '</strong><br><span style="font-size:0.7rem;color:var(--text3)">' + esc(c.client_email) + '</span></td>' +
+      '<td>' + esc(c.owner_name || '—') + '</td>' +
+      '<td>' + (c.last_contact_time ? fmtDate(c.last_contact_time) : 'Never') + '</td>' +
+      '<td>' + c.reminder_threshold_days + 'd</td>' +
+      '<td>' + s + '</td>' +
+      '<td>' +
+        '<button class="btn btn-sm" style="font-size:0.7rem;padding:2px 6px" onclick="touchClient(' + c.id + ')">Touched</button>' +
+        '<button class="btn btn-sm" style="font-size:0.7rem;padding:2px 6px;margin-left:2px;color:var(--red)" onclick="removeClient(' + c.id + ')">X</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+  document.querySelector('#clientsTable tbody').innerHTML = rows || '<tr><td colspan="6" style="padding:20px;color:var(--text2)">No clients yet. Sync inbox or add manually.</td></tr>';
+}
+
+async function syncClients() {
+  var btn = document.getElementById('syncClientsBtn');
+  btn.disabled = true; btn.textContent = 'Syncing...';
+  try {
+    var resp = await api('/clients/imap-sync', { method: 'POST' });
+    btn.textContent = 'Sync Inbox'; btn.disabled = false;
+    document.getElementById('clientsStatus').textContent = 'Created ' + resp.created + ', updated ' + resp.updated;
+    loadClients();
+  } catch(e) {
+    btn.textContent = 'Sync Inbox'; btn.disabled = false;
+    document.getElementById('clientsStatus').textContent = 'Sync failed: ' + e.message;
+  }
+}
+
+async function sendClientReminders() {
+  var btn = document.getElementById('remindBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    var resp = await api('/clients/send-reminders', { method: 'POST' });
+    btn.textContent = 'Send Reminders'; btn.disabled = false;
+    alert('Sent ' + resp.reminders_sent + ' reminders (' + resp.stale_clients + ' stale)');
+    loadClients();
+  } catch(e) {
+    btn.textContent = 'Send Reminders'; btn.disabled = false;
+    alert(e.message);
+  }
+}
+
+async function touchClient(id) {
+  await api('/clients/' + id + '/touch', { method: 'PUT' });
+  loadClients();
+}
+
+async function removeClient(id) {
+  if (!confirm('Remove this client?')) return;
+  await api('/clients/' + id, { method: 'DELETE' });
+  loadClients();
+}
+
+async function openClientModal(id) {
+  var isEdit = !!id;
+  var modal = document.getElementById('modalContent');
+  modal.innerHTML =
+    '<h2>' + (isEdit ? 'Edit' : 'Add') + ' Client</h2>' +
+    '<form onsubmit="saveClient(event,' + (id || 0) + ')">' +
+      '<div class="form-group"><label>Client Email *</label><input id="cEmail" required></div>' +
+      '<div class="form-group"><label>Name</label><input id="cName"></div>' +
+      '<div class="form-group"><label>Owner</label><select id="cOwner"><option value="">Unassigned</option></select></div>' +
+      '<div class="form-group"><label>Reminder (days)</label><input type="number" id="cThreshold" value="7"></div>' +
+      '<div class="form-group"><label>Notes</label><textarea id="cNotes" rows="2"></textarea></div>' +
+      '<button type="submit" class="btn btn-primary">Save</button>' +
+      '<button type="button" class="btn" onclick="closeModal()" style="margin-left:4px">Cancel</button>' +
+    '</form>';
+  document.getElementById('modalOverlay').classList.add('open');
+  try {
+    var users = await api('/users');
+    var sel = document.getElementById('cOwner');
+    users.forEach(function(u) { sel.innerHTML += '<option value="' + u.id + '">' + esc(u.display_name || u.username) + '</option>'; });
+  } catch(e) {}
+  if (isEdit) {
+    var c = clientData.find(function(x) { return x.id === id; });
+    if (c) {
+      document.getElementById('cEmail').value = c.client_email;
+      document.getElementById('cName').value = c.client_name;
+      document.getElementById('cOwner').value = c.owner_id || '';
+      document.getElementById('cThreshold').value = c.reminder_threshold_days;
+      document.getElementById('cNotes').value = c.notes;
+    }
+  }
+}
+
+async function saveClient(e, id) {
+  e.preventDefault();
+  var data = {
+    client_email: document.getElementById('cEmail').value,
+    client_name: document.getElementById('cName').value,
+    owner_id: parseInt(document.getElementById('cOwner').value) || null,
+    reminder_threshold_days: parseInt(document.getElementById('cThreshold').value) || 7,
+    notes: document.getElementById('cNotes').value
+  };
+  try {
+    if (id) await api('/clients/' + id, { method: 'PUT', body: JSON.stringify(data) });
+    else await api('/clients', { method: 'POST', body: JSON.stringify(data) });
+    closeModal();
+    loadClients();
+  } catch(e) { alert(e.message); }
+}
+
+function loadFirms() {
   var search = document.getElementById('firmSearch') ? document.getElementById('firmSearch').value : '';
   var params = search ? '?search=' + encodeURIComponent(search) : '';
   try {

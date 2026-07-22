@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timezone
 
 from sqlalchemy import Column, Integer, String, Float, Text, DateTime, JSON, Boolean, ForeignKey
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -168,6 +168,47 @@ class Contact(Base):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "owner_id": self.owner_id,
         }
+
+
+class Client(Base):
+    __tablename__ = "clients"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    client_email = Column(String(255), nullable=False, unique=True, index=True)
+    client_name = Column(String(255), default="")
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    last_contact_time = Column(DateTime, nullable=True)
+    last_sync_time = Column(DateTime, nullable=True)
+    reminder_sent_at = Column(DateTime, nullable=True)
+    reminder_threshold_days = Column(Integer, default=7)
+    notes = Column(Text, default="")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    owner = relationship("User", backref="clients")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "client_email": self.client_email,
+            "client_name": self.client_name or "",
+            "owner_id": self.owner_id,
+            "owner_name": self.owner.display_name or self.owner.username if self.owner else "",
+            "last_contact_time": self.last_contact_time.isoformat() if self.last_contact_time else None,
+            "last_sync_time": self.last_sync_time.isoformat() if self.last_sync_time else None,
+            "reminder_sent_at": self.reminder_sent_at.isoformat() if self.reminder_sent_at else None,
+            "reminder_threshold_days": self.reminder_threshold_days,
+            "days_since_contact": _days_since(self.last_contact_time),
+            "notes": self.notes or "",
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+def _days_since(dt):
+    if not dt:
+        return None
+    delta = datetime.now(timezone.utc) - dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else datetime.now(timezone.utc) - dt
+    return delta.days
 
 
 class Deal(Base):
